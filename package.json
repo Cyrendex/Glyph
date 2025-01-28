@@ -1,0 +1,12 @@
+{
+  "name": "glyph",
+  "version": "1.0.0",
+  "description": "The public repository for Programming Languages &amp; Automata II. TODO: Make this more elaborate",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Eren Unsal, Aaron Mearns, Axel Pestoni, Nick Kasten, Mehmet Nuri Colakoglu, Sebastian Rocha",
+  "license": "ISC"
+}
