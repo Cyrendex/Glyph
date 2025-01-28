@@ -4,7 +4,7 @@
   "description": "The public repository for Programming Languages &amp; Automata II. TODO: Make this more elaborate",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "keywords": [],
   "author": "Eren Unsal, Aaron Mearns, Axel Pestoni, Nick Kasten, Mehmet Nuri Colakoglu, Sebastian Rocha",
