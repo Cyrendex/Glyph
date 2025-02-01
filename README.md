@@ -11,7 +11,7 @@ TODO: Features
 
 ## Example Programs
 
-# Hello World
+### Hello World
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -21,7 +21,7 @@ TODO: Features
 
 ---
 
-# Defining and Calling Functions
+### Defining and Calling Functions
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -41,7 +41,7 @@ TODO: Features
 
 ---
 
-# Recursion
+### Recursion
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -51,7 +51,7 @@ TODO: Features
 
 ---
 
-# String Operations
+### String Operations
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -61,7 +61,7 @@ TODO: Features
 
 ---
 
-# Iteration
+### Iteration
 
 | Glyph | JavaScript |
 |-------|-----------|
