@@ -9,11 +9,11 @@ Glyph is a language that enables backend developers to approach programming with
 ## Features
 - Functional and Imperative paradigms
 - Native support for non-binary representations of real numbers such as floating slash, signed logarithm, and decimal floating point
-- Rust-style borrowing and ownership (in a safe, beginner-friendly, simplified form???)
+- Rust-style borrowing and ownership in a safe, beginner-friendly form
 - No root mixing in terminology and library functions
-- Wrappers - Thematically relevant
+- Wrappers for other common languages
 - Limited core functionality, importable functionality for additional support
-- Build-in support for generic typing
+- Built-in support for generic typing
 
 
 ## Example Programs
