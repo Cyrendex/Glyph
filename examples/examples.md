@@ -1,4 +1,4 @@
-# Example Program 0
+# Hello World
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -8,7 +8,7 @@
 
 ---
 
-# Example Program 1
+# Defining and Calling Functions
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -18,17 +18,17 @@
 
 ---
 
-# Example Program 2
+# Lambda Expressions
 
 | Glyph | JavaScript |
 |-------|-----------|
-| `affix io@exscribe`<br><br>`/@ lambda expressions can be described using conjure @/`<br>`var multiply: (int32, int32) -> int64 = conjure {`<br>`    a * b`<br>`};`<br><br>`main = {`<br>`    invoke exscribe multiply(4, 5);`<br>`    invoke exscribe multiply(-2,-7);`<br>`}` | `let multiply = (a, b) => {`<br>`    return a * b;`<br>`};`<br><br>`console.log(multiply(4, 5));`<br>`console.log(multiply(-2, -7));` |
+| `affix io@exscribe`<br><br>`/@ lambda expressions can be described using conjure @/`<br>`multiply: (int32, int32) -> int64 = conjure {`<br>`    a * b`<br>`};`<br><br>`main = {`<br>`    invoke exscribe multiply(4, 5);`<br>`    invoke exscribe multiply(-2,-7);`<br>`}` | `let multiply = (a, b) => {`<br>`    return a * b;`<br>`};`<br><br>`console.log(multiply(4, 5));`<br>`console.log(multiply(-2, -7));` |
 | **Output** | **Output** |
 | `20`<br>`14` | `20`<br>`14` |
 
 ---
 
-# Example Program 3
+# Recursion
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -38,7 +38,7 @@
 
 ---
 
-# Example Program 4
+# String Operations
 
 | Glyph | JavaScript |
 |-------|-----------|
@@ -48,7 +48,7 @@
 
 ---
 
-# Example Program 5
+# Iteration
 
 | Glyph | JavaScript |
 |-------|-----------|
