@@ -31,7 +31,7 @@ TODO: Features
 
 ---
 
-# Lambda Expressions
+### Lambda Expressions
 
 | Glyph | JavaScript |
 |-------|-----------|
