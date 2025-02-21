@@ -1,0 +1,100 @@
+Glyph {
+  Program   = Stmt*
+  Stmt  	= VarDec
+          	| MainStmt
+        	| LambdaStmt
+          	| ImportStmt
+        	| WhileStmt
+        	| IfStmt
+        	| EvokeStmt
+        	| InvokeStmt
+        	| ReturnStmt
+        	| Exp
+        	| break ";"                   	--break
+        	| AssignmentStmt
+        	| "++" Primary_id ";"         	--increment
+        	| space+
+  VarDec	= id TypeHint? "=" Exp endchar
+  TypeHint = ":" type
+  ReturnHint = "->" type
+  ImportBlock = "{" id ("," id)* "}"  
+  ImportStmt = "affix" module ("@") (id | ImportBlock)? endchar
+  MainStmt = main "=" (Exp | Stmt | Block)
+  EvokeStmt = evoke id "(" ListOf<Parameter, ",">? ")" ReturnHint? FunctionBody
+  Arguments = ("(" ListOf<(id | Exp), ","> ")")
+  InvokeStmt = invoke Function endchar
+  ConjureStmt = conjure Block
+  AssignmentStmt = Primary_id "=" Exp ";"?
+  LambdaStmt = id ":" "(" ListOf<Parameter, ",">? ")" ReturnHint "=" ConjureStmt endchar
+  ReturnStmt = return Exp
+  IfStmt	= if Exp Block (else (Block | IfStmt))?
+  WhileStmt = while Exp Block
+  Block 	= "{" Stmt* "}"
+  Function = id (Arguments | Exp)?
+  FunctionBody = "=" Exp --func
+                            	| Block --decl
+ 
+  Exp   	= Condition relop Condition  --test
+        	| Condition
+  Condition = Exp "+" Term           	--add
+        	| Exp "-" Term           	--sub
+        	| Term
+  Term  	= Term "*" Factor        	--mul
+        	| Term "/" Factor        	--div
+        	| Term "%" Factor        	--mod
+        	| Factor
+  Factor	= Primary ("**") Factor  	--exp
+        	| "-" Primary            	--neg
+        	| Primary
+  Primary   = Function
+        	| numeral
+        	| true                   	--true
+        	| false                  	--false
+        	| stringlit              	--string
+        	| charlit                	--char
+        	| Primary "[" Exp "]"    	--subscript
+        	| id                     	--id
+        	| "[" ListOf<Exp, ","> "]"   --array
+        	| "(" Exp ")"            	--parens
+  Parameter = id TypeHint?
+
+  affix	= "affix" ~idchar
+  let   	= "let" ~idchar
+  evoke	= "evoke" ~idchar
+  conjure = "conjure" ~idchar
+  invoke = "invoke" ~idchar
+  while 	= "while" ~idchar
+  if    	= "if" ~idchar
+  else  	= "else" ~idchar
+  break 	= "break" ~idchar
+  true  	= "true" ~idchar
+  false 	= "false" ~idchar
+  return   = "return" ~idchar
+  main 	= "main" ~idchar
+  type  	= ("&" | "*")? (int | float | decim | fixed | slash | slog | bool | string | codepoint | glyph) ~idchar "?"?
+  int     	= "u"? "int" bitsizes128?
+  float     	= "u"? "int" bitsizes64?
+  decim     	= "u"? "int" bitsizes64?
+  fixed     	= "u"? "int" bitsizes128?
+  slash     	= "u"? "int" bitsizes128?
+  slog     	= "u"? "int" bitsizes128?
+  bool     	= "bool"
+  string   	= "string"
+  codepoint = "codepoint"
+  glyph    	= "glyph"
+  bitsizes64 = "8" | "16" | "32" | "64"
+  bitsizes128 = bitsizes64 | "128"
+  keyword   =  evoke | conjure | invoke | main | while | if | else | break | let | true | false | type
+  id    	= ~keyword letter idchar*
+  module = letter idchar*
+  idchar	= letter | digit | "_"
+  numeral   = digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?
+  stringlit = "\"" (~"\"" any)* "\""
+  charlit = "'" (~"\"" any) "'"
+
+  relop 	= "<=" | "<" | "==" | "!=" | ">=" | ">"
+ 
+  space	+=  "/@" (~"@/" any)* "@/"    	--comment
+ 
+  endchar = ";"
+}
