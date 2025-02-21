@@ -1,0 +1,2 @@
+affix io@exscribe;
+main = exscribe “Hello world!”

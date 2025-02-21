@@ -1,9 +1,9 @@
 Glyph {
   Program   = Stmt*
   Stmt  	= VarDec
-          	| MainStmt
+          | MainStmt
         	| LambdaStmt
-          	| ImportStmt
+          | ImportStmt
         	| WhileStmt
         	| IfStmt
         	| EvokeStmt
@@ -32,7 +32,7 @@ Glyph {
   Block 	= "{" Stmt* "}"
   Function = id (Arguments | Exp)?
   FunctionBody = "=" Exp --func
-                            	| Block --decl
+              | Block --decl
  
   Exp   	= Condition relop Condition  --test
         	| Condition
