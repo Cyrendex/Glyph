@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+    />
+    <title>Glyph</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="styles/styles.css" />
+    <link rel="stylesheet" type="text/css" href="styles/prism.css" />
+  </head>
+
+  <body>
+    <section class="hero is-small">
+      <div id="content" class="content">
+        <div class="column is-1 is-pulled-left title-text">
+          <h3 class="title-text has-text-centered">Glyph</h3>
+        </div>
+        <div class="is-pulled-right">
+          <nav
+            class="navbar is-transparent is-spaced"
+            role="navigation"
+            aria-label="main navigation"
+          >
+            <div class="container">
+              <div class="navbar-brand">
+                <a
+                  role="button"
+                  class="navbar-burger burger"
+                  aria-label="menu"
+                  aria-expanded="false"
+                  data-target="navbarTopMain"
+                >
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                </a>
+              </div>
+              <div class="navbar-menu" id="navbarTopMain">
+                <div class="navbar-end">
+                  <a
+                    href="index.html"
+                    class="navbar-item is-size-6 has-text-weight-semibold"
+                    >Home</a
+                  >
+                  <a
+                    href="documentation.html"
+                    class="navbar-item is-size-6 has-text-weight-semibold"
+                    >Documentation</a
+                  >
+                  <a
+                    href="aboutus.html"
+                    class="navbar-item is-size-6 has-text-weight-semibold"
+                    >Collaborators</a
+                  >
+                </div>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </section>
+    <div class="header">
+      <img id="logo" type="png" src="images/logos/logo-transperent.png" />
+    </div>
+    <section class="content-body">
+        <div class="title-text">
+            <h1 class="has-text-centered">Documentation</h1>
+        </div>
+        <div class="box">
+            <p class="has-text-centered"> 
+                The following Glyph code snippet demonstrates the use of the affix keyword to import the exscribe module and call the exscribe function to print "Hello world!" to the console.
+            </p>
+            <pre>
+                <code class="language-rust line-numbers" data-prismjs-copy="Copy Glyph Snippet">
+                    affix io@exscribe;
+                    main = exscribe "Hello world!"
+                </code>
+            </pre>
+        </div>
+
+        <div class="box">
+            <p class="has-text-centered"> 
+                The following Glyph code snippet demonstrates the use of variables and type annotations in Glyph. The code declares three variables var1, var2, and var3 with different types and initializes them with values. The code also calls a function our_func() and assigns the return value to var3.
+            </p>
+            <pre>
+                <code class="language-rust line-numbers" data-prismjs-copy="Copy Glyph Snippet">
+                    var1 = 2;
+                    var2: glyph = "smth";
+                    var3: uint8 = our_func();
+                </code>
+            </pre>
+        </div>
+
+        <div class="box">
+            <p class="has-text-centered"> 
+                The following Glyph code calculates the factorial of a number using a while loop. The code initializes a variable n to 5 and calculates the factorial of n using a while loop. The result is stored in the variable fact and returned at the end of the program.
+            </p>
+            <pre>
+                <code class="language-rust line-numbers" data-prismjs-copy="Copy Glyph Snippet">
+                    main = {
+                        n: int32 = 5;
+                        fact: int32 = 1;
+                        while n > 1 {
+                          fact = fact * n;
+                          n = n - 1;
+                        }
+                        return fact
+                      }
+                </code>
+            </pre>
+        </div>
+
+        <div class="box">
+            <p class="has-text-centered"> 
+                The Fibonacci sequence is a series of numbers in which each number is the sum of the two preceding ones, usually starting with 0 and 1. In the following Glyph code, the Fibonacci sequence is calculated using a recursive function.
+            </p>
+            <pre>
+                <code class="language-rust line-numbers" data-prismjs-copy="Copy Glyph Snippet">
+                    evoke fib(n: int32) -> int32 {
+                        if n <= 1 {
+                          return n
+                        } else {
+                          return fib(n - 1) + fib(n - 2)
+                        }
+                      }
+                      
+                      main = fib(6)
+                </code>
+            </pre>
+        </div>
+
+        <div class="box">
+            <p class="has-text-centered"> 
+                The following Glyph code describes a function that checks if a given set of numbers is a Pythagorean triple. A Pythagorean triple consists of three positive integers a, b, and c, such that a^2 + b^2 = c^2. The function is_pythag_triple takes three unsigned integers as input and returns a boolean value indicating whether the input is a Pythagorean triple.
+            </p>
+            <pre>
+                <code class="language-rust line-numbers" data-prismjs-copy="Copy Glyph Snippet">
+                    affix io@exscribe;
+    
+                    /@ numeric types can be partially genericized by dropping their size value @/
+                    evoke is_pythag_triple (a, b, c: uint) -> bool 
+                        = (a ** 2 + b ** 2 == c ** 2)
+    
+                    main = {
+                        invoke exscribe is_pythag_triple (3, 4, 5);
+                        invoke exscribe is_pythag_triple (3, 4, 6);
+                    }
+                </code>
+            </pre>
+        </div>
+    </section>
+
+    <section>
+      <div class="bottom">
+        <a onclick="sendToTop()" class="up-arrow bottom-corner"></a>
+      </div>
+    </section>
+
+    <script src="scripts/prism.js" type="text/javascript" defer></script>
+    <script src="scripts/script.js" type="text/javascript" defer></script>
+
+  </body>
+</html>

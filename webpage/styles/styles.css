@@ -1,0 +1,124 @@
+html,
+body {
+  background-color: #bcdeff;
+  background-image: url('../images/backgrounds/background-blue.png');
+  margin: 0 auto;
+  min-height: 100%;
+  width: 100vw;
+}
+.header {
+  height: 40%;
+  text-align: center;
+}
+.title-text {
+  padding-bottom: 5px;
+  font-size: 40px;
+  font-weight: bold;
+}
+.subtitle-text {
+  font-size: 20px;
+  font-weight: bold;
+}
+.text-padding {
+  padding-bottom: 10px;
+}
+.text-page {
+  padding-top: 20px;
+  padding-left: 25%;
+  padding-right: 25%;
+}
+.up-arrow {
+  border: 3px solid rgba(0, 0, 0, 0.5);
+  border-radius: 1px;
+  border-right: 20px;
+  border-top: 20px;
+  pointer-events: visible;
+  transform: rotate(135deg);
+  transform-origin: center;
+  height: 1em;
+  width: 1em;
+  position: fixed;
+}
+.down-arrow {
+  border: 3px solid rgba(0, 0, 0, 0.5);
+  border-radius: 1px;
+  border-right: 20px;
+  border-top: 20px;
+  pointer-events: visible;
+  transform: rotate(315deg);
+  transform-origin: center;
+  height: 1em;
+  width: 1em;
+  position: fixed;
+}
+.left-arrow {
+  border: 3px solid rgba(0, 0, 0, 0.5);
+  border-radius: 1px;
+  border-right: 20px;
+  border-top: 20px;
+  pointer-events: visible;
+  transform: rotate(405deg);
+  transform-origin: center;
+  height: 1em;
+  width: 1em;
+  position: fixed;
+}
+.right-arrow {
+  border: 3px solid rgba(0, 0, 0, 0.5);
+  border-radius: 1px;
+  border-right: 20px;
+  border-top: 20px;
+  pointer-events: visible;
+  transform: rotate(225deg);
+  transform-origin: center;
+  height: 1em;
+  width: 1em;
+  position: fixed;
+}
+.bottom-corner {
+  float: right;
+  bottom: 20px;
+  right: 20px;
+}
+.content-body {
+  padding-top: 20px;
+  padding-left: 15%;
+  padding-right: 15%;
+}
+.card {
+  padding: 15px;
+}
+.button-transition {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  transition: transform 1s;
+  transform-style: preserve-3d;
+}
+.card-pos:hover .card-content {
+  transform: rotateY(180deg);
+  transition: transform 0.5s;
+}
+.front,
+.back {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  line-height: 300px;
+  color: #03446A;
+  text-align: center;
+  font-size: 60px;
+  border-radius: 5px;
+  backface-visibility: hidden;
+}
+.back {
+  background: #03446A;
+  transform: rotateY(180deg);
+}
+#logo {
+  margin-top: 2%;
+  width: 20%;
+  height: 20%;
+}
+@font-face {
+  font-family: 'pixel';
+  src: url('../fonts/pixel.ttf');
+}
