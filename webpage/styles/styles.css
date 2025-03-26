@@ -1,7 +1,6 @@
 html,
 body {
-  background-color: #bcdeff;
-  background-image: url('../images/backgrounds/background-blue.png');
+  background: linear-gradient(rgba(188, 222, 255, 0.7), rgba(188, 222, 255, 0.7)), url('../images/backgrounds/background-blue.png');
   margin: 0 auto;
   min-height: 100%;
   width: 100vw;
