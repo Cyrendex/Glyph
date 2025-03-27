@@ -9,23 +9,29 @@ Glyph {
         	| EvokeStmt
         	| InvokeStmt
         	| ReturnStmt
-        	| Exp
+        	| Exp ";"                       --exprstmt
         	| break ";"                   	--break
         	| AssignmentStmt
-        	| "++" Primary_id ";"         	--increment
+        	| ("++" | "--") Primary_id ";"         	--bump
         	| space+
-  VarDec	= id TypeHint? "=" Exp endchar
-  TypeHint = ":" type
-  ReturnHint = "->" type
+  
+  VarDec	= id Type_hint? "=" Exp endchar
+  Type    = ":" Type          --hint
+          | "->" Type         --return
+          | Type "?"          --option
+          | ("&" | "*") Type  --refderef
+          | "[" Type "]"      --array
+          | type
+
   ImportBlock = "{" id ("," id)* "}"  
-  ImportStmt = "affix" module ("@") (id | ImportBlock)? endchar
+  ImportStmt = affix module ("@") (id | ImportBlock)? endchar
   MainStmt = main "=" (Exp | Stmt | Block)
-  EvokeStmt = evoke id "(" ListOf<Parameter, ",">? ")" ReturnHint? FunctionBody
+  EvokeStmt = evoke id "(" ListOf<Parameter, ",">? ")" Type_return? FunctionBody
   Arguments = ("(" ListOf<(id | Exp), ","> ")")
   InvokeStmt = invoke Function endchar
   ConjureStmt = conjure Block
   AssignmentStmt = Primary_id "=" Exp ";"?
-  LambdaStmt = id ":" "(" ListOf<Parameter, ",">? ")" ReturnHint "=" ConjureStmt endchar
+  LambdaStmt = id ":" "(" ListOf<Parameter, ",">? ")" Type_return "=" ConjureStmt endchar
   ReturnStmt = return Exp
   IfStmt	= if Exp Block (else (Block | IfStmt))?
   WhileStmt = while Exp Block
@@ -34,7 +40,7 @@ Glyph {
   FunctionBody = "=" Exp --func
               | Block --decl
  
-  Exp   	= Condition relop Condition  --test
+  Exp   	= Condition relop Condition  --relop
         	| Condition
   Condition = Exp "+" Term           	--add
         	| Exp "-" Term           	--sub
@@ -56,7 +62,7 @@ Glyph {
         	| id                     	--id
         	| "[" ListOf<Exp, ","> "]"   --array
         	| "(" Exp ")"            	--parens
-  Parameter = id TypeHint?
+  Parameter = id Type_hint?
 
   affix	= "affix" ~idchar
   let   	= "let" ~idchar
@@ -71,7 +77,7 @@ Glyph {
   false 	= "false" ~idchar
   return   = "return" ~idchar
   main 	= "main" ~idchar
-  type  	= ("&" | "*")? (int | float | decim | fixed | slash | slog | bool | string | codepoint | glyph) ~idchar "?"?
+  type  	= (int | float | decim | fixed | slash | slog | bool | string | codepoint | glyph) ~idchar
   int     	= "u"? "int" bitsizes128?
   float     	= "u"? "int" bitsizes64?
   decim     	= "u"? "int" bitsizes64?
@@ -84,7 +90,7 @@ Glyph {
   glyph    	= "glyph"
   bitsizes64 = "8" | "16" | "32" | "64"
   bitsizes128 = bitsizes64 | "128"
-  keyword   =  evoke | conjure | invoke | main | while | if | else | break | let | true | false | type
+  keyword   =  affix | evoke | conjure | invoke | main | while | if | else | break | let | true | false | type
   id    	= ~keyword letter idchar*
   module = letter idchar*
   idchar	= letter | digit | "_"
