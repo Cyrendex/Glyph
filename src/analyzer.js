@@ -1,3 +1,9 @@
 export default function analyze(sourceCode) {
-    throw new Error("Not implemented!")
+    const builder = match.matcher.grammar.createSemantics().addOperation("rep", {
+        Program(statements) {
+
+        },
+        
+    }
+    )
 }

@@ -76,7 +76,7 @@ Glyph {
   true  	= "true" ~idchar
   false 	= "false" ~idchar
   return   = "return" ~idchar
-  main 	= "main" ~idchar
+  main 	  = "main" ~idchar
   type  	= (int | float | decim | fixed | slash | slog | bool | string | codepoint | glyph) ~idchar
   int     	= "u"? "int" bitsizes128?
   float     	= "u"? "int" bitsizes64?
