@@ -150,4 +150,4 @@ export function functionCall(callee, args) {
 String.prototype.type = stringType
 Number.prototype.type = floatType
 BigInt.prototype.type = intType
-Boolean.prototype.type = boolType
+Boolean.prototype.type = booleanType
