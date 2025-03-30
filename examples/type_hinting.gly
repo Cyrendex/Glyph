@@ -1,3 +1,10 @@
-var1 = 2;
-var2: glyph = "smth";
-var3: uint8 = our_func();
+evoke our_func() -> void {
+    exscribe "hi";
+}
+
+main = {
+  const var1 = 2;
+  const var2: string = "smth";
+  const var3: [[int32]] = [[8],[7]];
+  invoke our_func();
+}

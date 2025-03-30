@@ -1,2 +1,2 @@
 affix io@exscribe;
-main = exscribe "Hello world!"
+main = exscribe "Hello world!";

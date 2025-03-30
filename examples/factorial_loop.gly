@@ -1,9 +1,9 @@
 main = {
-  n: int32 = 5;
-  fact: int32 = 1;
+  let n: int32 = 5;
+  let fact: int32 = 1;
   while n > 1 {
     fact = fact * n;
     n = n - 1;
   }
-  return fact
+  exscribe fact;
 }
