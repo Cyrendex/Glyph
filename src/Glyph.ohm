@@ -9,6 +9,7 @@ Glyph {
         	| EvokeStmt
         	| InvokeStmt
         	| ReturnStmt
+          | ExcribeStmt
         	| Exp ";"                       --exprstmt
         	| break ";"                   	--break
         	| AssignmentStmt
@@ -22,7 +23,8 @@ Glyph {
           | ("&" | "*") Type  --refderef
           | "[" Type "]"      --array
           | type
-
+  
+  ExcribeStmt = exscribe Exp endchar
   ImportBlock = "{" id ("," id)* "}"  
   ImportStmt = affix module ("@") (id | ImportBlock)? endchar
   MainStmt = main "=" (Exp | Stmt | Block)
@@ -66,6 +68,7 @@ Glyph {
 
   affix	= "affix" ~idchar
   let   	= "let" ~idchar
+  exscribe = "exscribe" ~idchar
   evoke	= "evoke" ~idchar
   conjure = "conjure" ~idchar
   invoke = "invoke" ~idchar
