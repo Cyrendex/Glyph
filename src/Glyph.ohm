@@ -1,109 +1,140 @@
 Glyph {
   Program   = Stmt*
-  Stmt  	= VarDec
-          | MainStmt
-        	| LambdaStmt
+  
+  Stmt  	= MainStmt
+          | LambdaStmt
           | ImportStmt
-        	| WhileStmt
-        	| IfStmt
-        	| EvokeStmt
-        	| InvokeStmt
-        	| ReturnStmt
+          | WhileStmt
+          | LetStmt
+          | ConstStmt
+          | IfStmt
+          | EvokeStmt
+          | InvokeStmt
+          | ReturnStmt
           | ExscribeStmt
-        	| Exp ";"                       --exprstmt
-        	| break ";"                   	--break
-        	| AssignmentStmt
-        	| ("++" | "--") Primary_id ";"         	--bump
-        	| space+
-  
-  VarDec	= id Type_hint? "=" Exp endchar
-  Type    = ":" Type          --hint
-          | "->" Type         --return
-          | Type "?"          --option
-          | ("&" | "*") Type  --refderef
-          | "[" Type "]"      --array
+          | Exp ";"                       --exprstmt
+          | break ";"                    --break
+          | AssignmentStmt
+          | ("++" | "--") Primary_id ";"   --bump
+          | space+
+
+  VarDec = id Type_hint? "=" Exp endchar
+  Type_hint = ":" Type
+
+  Type    = Type "?"              --option
+          | ("&" | "*") Type      --refderef
+          | "[" Type "]"          --array
           | type
-  
+
   ExscribeStmt = exscribe Exp endchar
-  ImportBlock = "{" id ("," id)* "}"  
+  ImportBlock = "{" id ("," id)* "}"
   ImportStmt = affix module ("@") (id | ImportBlock)? endchar
-  MainStmt = main "=" (Exp | Stmt | Block)
-  EvokeStmt = evoke id "(" ListOf<Parameter, ",">? ")" Type_return? FunctionBody
-  Arguments = ("(" ListOf<(id | Exp), ","> ")")
-  InvokeStmt = invoke Function endchar
-  ConjureStmt = conjure Block
-  AssignmentStmt = Primary_id "=" Exp ";"?
-  LambdaStmt = id ":" "(" ListOf<Parameter, ",">? ")" Type_return "=" ConjureStmt endchar
-  ReturnStmt = return Exp
-  IfStmt	= if Exp Block (else (Block | IfStmt))?
-  WhileStmt = while Exp Block
-  Block 	= "{" Stmt* "}"
-  Function = id (Arguments | Exp)?
-  FunctionBody = "=" Exp --func
-              | Block --decl
- 
-  Exp   	= Condition relop Condition  --relop
-        	| Condition
-  Condition = Exp "+" Term           	--add
-        	| Exp "-" Term           	--sub
-        	| Term
-  Term  	= Term "*" Factor        	--mul
-        	| Term "/" Factor        	--div
-        	| Term "%" Factor        	--mod
-        	| Factor
-  Factor	= Primary ("**") Factor  	--exp
-        	| "-" Primary            	--neg
-        	| Primary
-  Primary   = Function
-        	| numeral
-        	| true                   	--true
-        	| false                  	--false
-        	| stringlit              	--string
-        	| charlit                	--char
-        	| Primary "[" Exp "]"    	--subscript
-        	| id                     	--id
-        	| "[" ListOf<Exp, ","> "]"   --array
-        	| "(" Exp ")"            	--parens
+
+  MainStmt = main "=" (Block | Stmt | Exp)
+  EvokeStmt = evoke id "(" ParameterListOpt ")" "->" Type FunctionBody
+
+  ParameterListOpt = ListOf<Parameter, ",">
   Parameter = id Type_hint?
 
-  affix	= "affix" ~idchar
-  let   	= "let" ~idchar
+  Arguments = "(" ListOf<Exp, ","> ")"
+  InvokeStmt = invoke exscribe Exp endchar --exscribe
+             | invoke ~("exscribe") id Arguments endchar --invoke
+
+  ConjureStmt = conjure Block
+  LetStmt = let VarDec
+  ConstStmt = const VarDec
+  AssignmentStmt = Primary_id "=" Exp ";"?
+  LambdaStmt = id ":" "(" ParameterListOpt ")" "->" Type "=" ConjureStmt endchar
+
+  ReturnStmt = return Exp
+  IfStmt = if Exp Block (else (Block | IfStmt))?
+  WhileStmt = while Exp Block
+  Block = "{" Stmt* "}"
+
+  Function = id (Arguments | Exp)?
+  FunctionBody = "=" Exp --func
+               | Block    --decl
+
+  Exp = Condition relop Condition --relop
+      | Condition
+  
+  Condition = Condition "+" Term --add
+            | Condition "-" Term --sub
+            | Term
+
+  Term = Term "*" Factor --mul
+       | Term "/" Factor --div
+       | Term "%" Factor --mod
+       | Factor
+
+  Factor = Primary "**" Factor --exp
+         | "-" Primary         --neg
+         | Primary
+
+  Primary = id Arguments          --functionCall
+          | numeral
+          | true                  --true
+          | false                 --false
+          | stringlit             --string
+          | charlit               --char
+          | Primary "[" Exp "]"   --subscript
+          | id                    --id
+          | "[" ListOf<Exp, ","> "]" --array
+          | "(" Exp ")"          --parens
+
+  affix = "affix" ~idchar
+  let = "let" ~idchar
+  const = "const" ~idchar
   exscribe = "exscribe" ~idchar
-  evoke	= "evoke" ~idchar
+  evoke = "evoke" ~idchar
   conjure = "conjure" ~idchar
   invoke = "invoke" ~idchar
-  while 	= "while" ~idchar
-  if    	= "if" ~idchar
-  else  	= "else" ~idchar
-  break 	= "break" ~idchar
-  true  	= "true" ~idchar
-  false 	= "false" ~idchar
-  return   = "return" ~idchar
-  main 	  = "main" ~idchar
-  type  	= (int | float | decim | fixed | slash | slog | bool | string | codepoint | glyph) ~idchar
-  int     	= "u"? "int" bitsizes128?
-  float     	= "u"? "int" bitsizes64?
-  decim     	= "u"? "int" bitsizes64?
-  fixed     	= "u"? "int" bitsizes128?
-  slash     	= "u"? "int" bitsizes128?
-  slog     	= "u"? "int" bitsizes128?
-  bool     	= "bool"
-  string   	= "string"
+  while = "while" ~idchar
+  if = "if" ~idchar
+  else = "else" ~idchar
+  break = "break" ~idchar
+  true = "true" ~idchar
+  false = "false" ~idchar
+  return = "return" ~idchar
+  main = "main" ~idchar
+
+  type = (numericType | bool | string | codepoint | glyph | void) ~idchar
+  numericType = unsignedNumericType | signedNumericType
+
+  unsignedNumericType = "uint" bitsizes128?
+                       | "ufloat" bitsizes64?
+                       | "udecim" bitsizes64?
+                       | "uslash" bitsizes128?
+                       | "uslog" bitsizes128?
+
+  signedNumericType = "int" bitsizes128?
+                     | "float" bitsizes64?
+                     | "decim" bitsizes64?
+                     | "slash" bitsizes128?
+                     | "slog" bitsizes128?
+
+  bool = "bool"
+  string = "string"
   codepoint = "codepoint"
-  glyph    	= "glyph"
-  bitsizes64 = "8" | "16" | "32" | "64"
+  glyph = "glyph"
+  void = "void"
+
+  bitsizes64 = ("8" | "16" | "32" | "64")
   bitsizes128 = bitsizes64 | "128"
-  keyword   =  affix | evoke | conjure | invoke | main | while | if | else | break | let | true | false | type
-  id    	= ~keyword letter idchar*
+
+  keyword = affix | evoke | conjure | invoke | main | while | if | else | break | let | const | true | false | type | return
+
+  id = ~keyword letter idchar*
   module = letter idchar*
-  idchar	= letter | digit | "_"
-  numeral   = digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?
+  idchar = letter | digit | "_"
+
+  numeral = digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?
   stringlit = "\"" (~"\"" any)* "\""
   charlit = "'" (~"\"" any) "'"
 
-  relop 	= "<=" | "<" | "==" | "!=" | ">=" | ">"
- 
-  space	+=  "/@" (~"@/" any)* "@/"    	--comment
- 
+  relop = "<=" | "<" | "==" | "!=" | ">=" | ">"
+
+  space += "/@" (~"@/" any)* "@/" --comment
+
   endchar = ";"
 }
