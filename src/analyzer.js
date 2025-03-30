@@ -259,7 +259,7 @@ export default function analyze(match) {
     //print statement
     //Aaron
     exscribeStatement(_open, message, _close) {
-      console.log(message);
+      return console.log(message);
     },
 
     //this if for calling functions
