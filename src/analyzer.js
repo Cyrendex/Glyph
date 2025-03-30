@@ -136,55 +136,43 @@ export default function analyze(match) {
 
   //After this point is Mehmet
 
-  //Toal has this but we don't
   function checkBothHaveTheSameType() {}
 
-  //Toal has this but we don't
   function checkAllHaveSameType() {}
 
-  //Toal has this but we don't
+  //only if we have structs
   function includesAsField() {}
 
-  //Toal has this but we don't
+  //struct
   function checkNotBeSelfContaining() {}
 
-  //Toal has this but we don't
   function equivalent() {}
 
-  //Toal has this but we don't
   function assignable() {}
 
-  //Toal has this but we don't
+  //extension
   function typeDescription() {}
 
-  //Toal has this but we don't
   function checkBeAssignable() {}
 
-  //Toal has this but we don't
+  //struct
   function checkHaveDistinctFields() {}
 
-  //Toal has this but we don't
+  //struct
   function checkHaveMember() {}
 
-  //Toal has this but we don't
   function checkBeInLoop() {}
 
-  //Toal has this but we don't
   function checkBeInAFunction() {}
 
-  //Toal has this but we don't
   function checkBeCallable() {}
 
-  //Toal has this but we don't
   function checkNotReturnAnything() {}
 
-  //Toal has this but we don't
   function checkReturnSomething() {}
 
-  //Toal has this but we don't
   function checkBeReturnable() {}
 
-  //Toal has this but we don't
   function checkHaveCorrectArgumentCount() {}
 
   //builder goes here
@@ -192,161 +180,178 @@ export default function analyze(match) {
     Program(statements) {
       return core.program(statements.children.map((s) => s.rep()));
     },
-    //this nxt line needs to be changed to include all the functions that come after
-    //and all functions must be "unfunctioned"
+
+    //we have this but Toal doesn't
+    //main is defined as a default function, this is the one that gets executed
+    //Aaron method
+    mainStatement() {},
+
+    //we have this but Toal doesn't
+    //print statement
+    //Aaron
+    exscribeStatement() {},
+
+    invokeStatement() {},
+
+    //we have this but Toal doesn't
+    //lambda functions
+    //Aaron
+    conjureStatement() {},
+
+    //we have this but Toal doesn't
+    //import statement
+    //Aaron
+    importStatement() {},
+
+    //we have this but Toal doesn't
+    //probably calls the import statement and makes function list
+    //Aaron
+    importedFunction() {},
+
+    //Onwards is Mehmet
+    variableDecl() {},
+
+    typeDecl() {},
+
+    //struct/not used, scrap?
+    field() {},
+
+    FunDecl() {},
+
+    Params() {},
+
+    Param() {},
+
+    Type_optional() {},
+
+    Type_function() {},
+
+    Type_id() {},
+
+    Statement_bump() {},
+
+    Statement_assign() {},
+
+    //unsure, scrap?
+    Statement_call() {},
+
+    Statement_break() {},
+
+    Statement_return() {},
+
+    Statement_shortreturn() {},
+
+    IfStmt_long() {},
+
+    IfStmt_elsif() {},
+
+    IfStmt_short() {},
+
+    LoopStmt_while() {},
+
+    LoopStmt_range() {},
+
+    Block() {},
+
+    Exp_conditional() {},
+
+    //maybe scrap?
+    Exp_unwrapelse() {},
+
+    Exp_or(exp, _ops, exps) {
+      let left = exp.rep();
+      mustHaveBooleanType(left, { at: exp });
+      for (let e of exps.children) {
+        let right = e.rep();
+        mustHaveBooleanType(right, { at: e });
+        left = core.binary("||", left, right, core.booleanType);
+      }
+      return left;
+    },
+
+    Exp_and(exp, _ops, exps) {
+      let left = exp.rep();
+      mustHaveBooleanType(left, { at: exp });
+      for (let e of exps.children) {
+        let right = e.rep();
+        mustHaveBooleanType(right, { at: e });
+        left = core.binary("&&", left, right, core.booleanType);
+      }
+      return left;
+    },
+
+    Exp_xor() {},
+
+    Exp_bitor(exp, _ops, exps) {
+      let left = exp.rep();
+      mustHaveIntegerType(left, { at: exp });
+      for (let e of exps.children) {
+        let right = e.rep();
+        mustHaveIntegerType(right, { at: e });
+        left = core.binary("|", left, right, core.intType);
+      }
+      return left;
+    },
+
+    Exp_bitand(exp, _andOps, exps) {
+      let left = exp.rep();
+      mustHaveIntegerType(left, { at: exp });
+      for (let e of exps.children) {
+        let right = e.rep();
+        mustHaveIntegerType(right, { at: e });
+        left = core.binary("&", left, right, core.intType);
+      }
+      return left;
+    },
+
+    Exp_bitxor(exp, _xorOps, exps) {
+      let left = exp.rep();
+      mustHaveIntegerType(left, { at: exp });
+      for (let e of exps.children) {
+        let right = e.rep();
+        mustHaveIntegerType(right, { at: e });
+        left = core.binary("^", left, right, core.intType);
+      }
+      return left;
+    },
+
+    Exp_compare() {},
+
+    Exp_shift() {},
+
+    Exp_add() {},
+
+    Exp_subtract() {},
+
+    Exp_multiply() {},
+
+    Exp_divide() {},
+
+    Exp_power() {},
+
+    Exp_unary() {},
+
+    Exp_parens() {},
+
+    //scrap maybe
+    Exp_subscript() {},
+
+    //same as invoke
+    Exp_call() {},
+
+    Exp_id() {},
+
+    true() {},
+
+    false() {},
+
+    floatlit() {},
+
+    stringlit() {},
+
+    // and invoke instead of call
   });
 
-  //we have this but Toal doesn't
-  function mainStatement() {}
-
-  //we have this but Toal doesn't
-  function exscribeStatement() {}
-
-  //we have this but Toal doesn't
-  function conjureStatement() {}
-
-  //we have this but Toal doesn't
-  function importStatement() {}
-
-  //we have this but Toal doesn't
-  function lambdaDeclaration() {}
-
-  //aren't these same as conjure
-  //we have this but Toal doesn't
-  function lambda() {}
-
-  //aren't these same as conjure
-  //we have this but Toal doesn't
-  function importedFunction() {}
-
-  //Toal has this but we don't
-  function variableDecl() {}
-
-  //Toal has this but we don't
-  function typeDecl() {}
-
-  //Toal has this but we don't
-  function field() {}
-
-  function FunDecl() {}
-
-  function Params() {}
-
-  function Param() {}
-
-  function Type_optional() {}
-
-  //Toal has this but we don't
-  function Type_function() {}
-
-  function Type_id() {}
-
-  function Statement_bump() {}
-
-  function Statement_assign() {}
-
-  //Toal has this but we don't
-  function Statement_call() {}
-
-  function Statement_break() {}
-
-  function Statement_return() {}
-
-  //Toal has this but we don't
-  function Statement_shortreturn() {}
-
-  function IfStmt_long() {}
-
-  //Toal has this but we don't
-  function IfStmt_elsif() {}
-
-  //Toal has this but we don't
-  function IfStmt_short() {}
-
-  function LoopStmt_while() {}
-
-  //Toal has this but we don't
-  function LoopStmt_repeat() {}
-
-  //Toal has this but we don't
-  function LoopStmt_range() {}
-
-  //Toal has this but we don't
-  function LoopStmt_collection() {}
-
-  //Toal has this but we don't
-  function Block() {}
-
-  //Toal has this but we don't
-  function Exp_conditional() {}
-
-  //Toal has this but we don't
-  function Exp_unwrapelse() {}
-
-  function Exp_or() {}
-
-  function Exp_and() {}
-
-  function Exp_xor() {}
-
-  function Exp_bitor() {}
-
-  function Exp_bitand() {}
-
-  function Exp_bitxor() {}
-
-  //Toal has this but we don't
-  function Exp_compare() {}
-
-  //Toal has this but we don't
-  function Exp_shift() {}
-
-  //Toal has this but we don't
-  function Exp_add() {}
-
-  //Toal has this but we don't
-  function Exp_multiply() {}
-
-  //Toal has this but we don't
-  function Exp_power() {}
-
-  function Exp_unary() {}
-
-  //Toal has this but we don't
-  function Exp_emptyarray() {}
-
-  //Toal has this but we don't
-  function Exp_arrayexpression() {}
-
-  //Toal has this but we don't
-  function Exp_arrayoptional() {}
-
-  //Toal has this but we don't
-  function Exp_parens() {}
-
-  //Toal has this but we don't
-  function Exp_subscript() {}
-
-  //Toal has this but we don't
-  function Exp_member() {}
-
-  //Toal has this but we don't
-  function Exp_call() {}
-
-  //Toal has this but we don't
-  function Exp_id() {}
-
-  function ttrue() {}
-
-  function ffalse() {}
-
-  function floatlit() {}
-
-  function stringlit() {}
-
   //change the return to the correct build
-  return {
-    kind: "Program",
-    body: { kind: "potato" },
-  };
+  return builder(match).rep();
 }

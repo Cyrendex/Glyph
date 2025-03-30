@@ -30,6 +30,10 @@ export function exscribeStatement(expression) {
   return { kind: "ExscribeStatement", expression };
 }
 
+export function invokeStatement(expression) {
+  return { kind: "InvokeStatement", expression };
+}
+
 export function conjureStatement(block) {
   return { kind: "ConjureStatement", block };
 }
@@ -50,13 +54,13 @@ export function ifStatement(condition, consequent, alternative) {
 //   return { kind: "ShortIfStatement", condition, consequent }
 // }
 
-export function lambdaDeclaration(lambda, initializer) {
-  return { kind: "LambdaStatement", lambda, initializer };
-}
+// export function lambdaDeclaration(lambda, initializer) {
+//   return { kind: "LambdaStatement", lambda, initializer };
+// }
 
-export function lambda(name, params, body, type) {
-  return { kind: "Lambda", name, params, body, type };
-}
+// export function lambda(name, params, body, type) {
+//   return { kind: "Lambda", name, params, body, type };
+// }
 
 export function functionDeclaration(fun) {
   return { kind: "FunctionEvoke", fun };
