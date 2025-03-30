@@ -258,7 +258,9 @@ export default function analyze(match) {
     //we have this but Toal doesn't
     //print statement
     //Aaron
-    exscribeStatement() {},
+    exscribeStatement(_open, message, _close) {
+      console.log(message);
+    },
 
     //this if for calling functions
     //Aaron
