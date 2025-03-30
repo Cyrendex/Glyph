@@ -10,6 +10,11 @@ export function variable(name, type) {
   return { kind: "Variable", name, type }
 }
 
+export const uintType = "uint";
+export const ufloatType = "ufloat";
+export const udecimType = "udecim";
+export const uslashType = "uslash";
+export const uslogType = "uslog";
 export const intType = "int"
 export const floatType = "float"
 export const decimType = "decim"
@@ -24,6 +29,10 @@ export const glyphType = "glyph"
 
 export function mainStatement(executables) {
   return { kind: "MainStatement", executables }
+}
+
+export function exscribeStatement(expression) {
+  return { kind: "ExscribeStatement", expression }
 }
 
 export function conjureStatement(block) {
@@ -104,8 +113,12 @@ export function subscript(array, index) {
   return { kind: "SubscriptExpression", array, index}
 }
 
-export function arrayExpression(elements) {
-  return { kind: "ArrayExpression", elements}
+export function arrayExpression(elements, type) {
+  return {
+    kind: "ArrayExpression",
+    elements,
+    type
+  };
 }
 
 export function functionCall(callee, args) {
