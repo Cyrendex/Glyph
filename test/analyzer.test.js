@@ -440,16 +440,18 @@ const semanticErrors = [
 
 
 describe("The analyzer", () => {
-  for (const [scenario, source] of semanticChecks) {
-    it(`recognizes ${scenario}`, () => {
-      assert.ok(analyze(parse(source)), (scenario + " should not throw"))
-    })
-  }
-  for (const [scenario, source, errorMessagePattern] of semanticErrors) {
-    it(`throws on ${scenario}`, () => {
-      assert.throws(() => analyze(parse(source)), errorMessagePattern)
-    })
-  }
+    console.log("Running " + semanticChecks.length + " semantic checks...")
+    for (const [scenario, source] of semanticChecks) {
+        it(`recognizes ${scenario}`, () => {
+            assert.ok(analyze(parse(source)), (scenario + " should not throw"))
+        })
+    }
+    console.log("Running " + semanticErrors.length + " semantic checks...")
+    for (const [scenario, source, errorMessagePattern] of semanticErrors) {
+        it(`throws on ${scenario}`, () => {
+            assert.throws(() => analyze(parse(source)), errorMessagePattern)
+        })
+    }
   // it("produces the expected representation for a trivial program", () => {
   //   assert.deepEqual(
   //     analyze(parse("let x = π + 2.2;")),
