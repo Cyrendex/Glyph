@@ -12,10 +12,10 @@ Glyph {
           | InvokeStmt
           | ReturnStmt
           | ExscribeStmt
-          | Exp ";"                       --exprstmt
-          | break ";"                    --break
+          | Exp endchar                       --exprstmt
+          | break endchar                    --break
           | AssignmentStmt
-          | ("++" | "--") Primary_id ";"   --bump
+          | ("++" | "--") Primary_id endchar   --bump
           | space+
 
   VarDec = id Type_hint? "=" Exp endchar
@@ -28,7 +28,7 @@ Glyph {
 
   ExscribeStmt = exscribe Exp endchar
   ImportBlock = "{" id ("," id)* "}"
-  ImportStmt = affix module ("@") (id | ImportBlock)? endchar
+  ImportStmt = affix module "@" (id | ImportBlock)? endchar
 
   MainStmt = main "=" (Block | Stmt | Exp)
   EvokeStmt = evoke id "(" ParameterListOpt ")" "->" Type FunctionBody
@@ -51,7 +51,7 @@ Glyph {
   Block = "{" Stmt* "}"
 
   Function = id (Arguments | Exp)?
-  FunctionBody = "=" Exp --func
+  FunctionBody = "=" Stmt_exprstmt --func
                | Block    --decl
 
   Exp = Condition relop Condition --relop
