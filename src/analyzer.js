@@ -461,10 +461,10 @@ export default function analyze(match) {
         },
 
         // Function call expression: invoke name(args...)
-        InvokeStmt_exscribe(_invoke, _exscribe, exp, _endchar) {
-            const expression = exp.analyze();
-            return core.exscribeStatement(expression);
-        },
+        // InvokeStmt_exscribe(_invoke, _exscribe, exp, _endchar) {
+        //     const expression = exp.analyze();
+        //     return core.exscribeStatement(expression);
+        // },
         
         InvokeStmt_invoke(_invoke, funcId, argsNode, _endchar) {
             const calleeName = funcId.sourceString;
