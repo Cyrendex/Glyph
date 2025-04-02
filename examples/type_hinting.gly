@@ -1,10 +1,11 @@
 evoke our_func() -> void {
-    exscribe "hi";
+  exscribe "hi";
 }
 
 main = {
   const var1 = 2;
-  const var2: string = "smth";
-  const var3: [[int32]] = [[8],[7]];
+  const var2: glyph = 'a';
+  const var3: string = "smth";
+  const var4: [[int32]] = [[8],[7]];
   invoke our_func();
 }

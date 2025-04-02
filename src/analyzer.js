@@ -136,6 +136,7 @@ export default function analyze(match) {
     function isText(type) {
         return textTypes.has(type);
     }
+    
     function areCompatible(t1, t2) {
         if (t1 === t2 || t1 === core.anyType || t2 === core.anyType) {
             return true;
