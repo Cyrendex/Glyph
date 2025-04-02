@@ -1,4 +1,5 @@
 affix io@exscribe;
+
 main = {
   let n: int32 = 5;
   let fact: int32 = 1;
