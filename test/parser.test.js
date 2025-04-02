@@ -9,7 +9,7 @@ const syntaxChecks = [
 
 // Expected to be syntactically incorrect
 const syntaxErrors = [
-    ["misplaced semicolon", "main = 0;", /Line 1, col 9/],
+    ["missing semicolon", "main = {0}", /Line 1, col 10/],
 ]
 
 describe("Parser", () => {

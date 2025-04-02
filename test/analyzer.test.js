@@ -73,7 +73,7 @@ const semanticChecks = [
     ["Function with parameters", 
         "\
         affix io@exscribe; \
-        evoke add(a: int32, b: int32) -> int32 = (a + b) \
+        evoke add(a: int32, b: int32) -> int32 = (a + b); \
         main = { \
             exscribe add(2, 3); \
         }"
@@ -93,8 +93,8 @@ const semanticChecks = [
     ["Nested function calls", 
         "\
         affix io@exscribe; \
-        evoke square(x: int32) -> int32 = (x * x) \
-        evoke sum(a: int32, b: int32) -> int32 = (a + b) \
+        evoke square(x: int32) -> int32 = (x * x); \
+        evoke sum(a: int32, b: int32) -> int32 = (a + b); \
         main = { \
             exscribe sum(square(3), square(4)); \
         }"
@@ -112,7 +112,7 @@ const semanticChecks = [
     ["Function with multiple parameters", 
         "\
         affix io@exscribe; \
-        evoke multiply(a: int32, b: int32, c: int32) -> int32 = (a * b * c) \
+        evoke multiply(a: int32, b: int32, c: int32) -> int32 = (a * b * c); \
         main = { \
             exscribe multiply(2, 3, 4); \
         }"
@@ -194,7 +194,7 @@ const semanticChecks = [
     ["Function returning an array", 
         "\
         affix io@exscribe; \
-        evoke getArray() -> [int32] = ([1, 2, 3]) \
+        evoke getArray() -> [int32] = ([1, 2, 3]); \
         main = { \
             exscribe getArray(); \
         }"

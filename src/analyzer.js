@@ -242,6 +242,9 @@ export default function analyze(match) {
         Program(statements) {
             return core.program(statements.children.map(s => s.analyze()));
         },
+        Stmt_exprstmt(exp, _semi) {
+            return exp.analyze();
+        },
         MainStmt(_main, _eq, body) {
             // Analyze the body (Exp | Stmt | Block)
             const analyzedBody = body.analyze();
@@ -459,12 +462,6 @@ export default function analyze(match) {
             check(validTypeRegex.test(typeStr), `Invalid numeric type: ${typeStr}`, this);
             return typeStr;
         },
-
-        // Function call expression: invoke name(args...)
-        // InvokeStmt_exscribe(_invoke, _exscribe, exp, _endchar) {
-        //     const expression = exp.analyze();
-        //     return core.exscribeStatement(expression);
-        // },
         
         InvokeStmt_invoke(_invoke, funcId, argsNode, _endchar) {
             const calleeName = funcId.sourceString;
