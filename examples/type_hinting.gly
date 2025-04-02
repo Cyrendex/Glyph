@@ -1,3 +1,4 @@
+affix io@exscribe;
 evoke our_func() -> void {
   exscribe "hi";
 }

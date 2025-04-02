@@ -1,0 +1,8 @@
+affix io@exscribe;
+evoke square(x: int32) -> int32 
+    = (x * x) 
+
+evoke sum(a: int32, b: int32) -> int32 
+    = ( a + b ) 
+
+main = { exscribe sum(square(3), square(4)); }
