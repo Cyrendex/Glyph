@@ -58,6 +58,13 @@ function isArrayType(type) {
   return type.endsWith("[]");
 }
 
+function checkImportedFunction(name, node) {
+    const entity = context.lookup(name);
+    check(entity, `Function '${name}' must be imported before use`, node);
+    checkIsFunction(entity, node);
+    return entity;
+}
+
 function unwrapArrayType(type) {
   return type.substring(0, type.length - 2); // removes rightmost []
 }
@@ -137,6 +144,13 @@ export default function analyze(match) {
         return textTypes.has(type);
     }
     
+    function checkImportedFunction(name, node) {
+        const entity = context.lookup(name);
+        check(entity, `Function '${name}' must be imported before use`, node);
+        checkIsFunction(entity, node);
+        return entity;
+    }
+
     function areCompatible(t1, t2) {
         if (t1 === t2 || t1 === core.anyType || t2 === core.anyType) {
             return true;
@@ -410,6 +424,16 @@ export default function analyze(match) {
             check(baseType !== core.voidType, "Array elements cannot have type void", typeNode);
             return `${baseType}[]`;
         },
+        Primary_subscript(arrayNode, _open, indexNode, _close) {
+            const array = arrayNode.analyze();
+            const index = indexNode.analyze();
+          
+            check(isArrayType(array.type), "Only arrays can be subscripted", arrayNode);
+            check(isNumeric(index.type), "Array index must be a number", indexNode);
+          
+            const elementType = array.type.replace(/\[\]$/, ""); // peel off one []
+            return core.subscript(array, index, elementType);
+          }, 
         Type_hint(_colon, typeNode) {
             return typeNode.analyze(); // directly delegate to type's analysis
         },
@@ -455,9 +479,11 @@ export default function analyze(match) {
         
         // Exscribe output statement: exscribe expr;
         ExscribeStmt(_exscribe, exp, _semi) {
+            const exscribeFunc = context.lookup("exscribe");
+            checkDeclared(exscribeFunc, "exscribe", _exscribe);
             const value = exp.analyze();
             return core.exscribeStatement(value);
-        },
+        },        
         // Return statement: return expr?;
         ReturnStmt(_return, expr) {
             check(context.currentFunction, "Return can only appear inside a function", _return);
