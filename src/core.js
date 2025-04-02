@@ -109,9 +109,15 @@ export function unary(op, operand, type) {
   return { kind: "UnaryExpression", op, operand, type}
 }
 
-export function subscript(array, index) {
-  return { kind: "SubscriptExpression", array, index}
+export function subscript(array, index, type) {
+  return {
+    kind: "SubscriptExpression",
+    array,
+    index,
+    type
+  };
 }
+
 
 export function arrayExpression(elements, type) {
   return {
