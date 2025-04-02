@@ -1,7 +1,7 @@
 Glyph {
   Program   = Stmt*
   
-  Stmt  	= MainStmt
+  Stmt    = MainStmt
           | LambdaStmt
           | ImportStmt
           | WhileStmt
@@ -37,8 +37,7 @@ Glyph {
   Parameter = id Type_hint?
 
   Arguments = "(" ListOf<Exp, ","> ")"
-  InvokeStmt = invoke exscribe Exp endchar --exscribe
-             | invoke ~("exscribe") id Arguments endchar --invoke
+  InvokeStmt = invoke ~(exscribe) id Arguments endchar --invoke
 
   ConjureStmt = conjure Block
   LetStmt = let VarDec
@@ -58,7 +57,9 @@ Glyph {
   Exp = Condition relop Condition --relop
       | Condition
   
-  Condition = Condition "+" Term --add
+  Condition = Condition "&&" Term --and
+            | Condition "||" Term --or
+            | Condition "+" Term --add
             | Condition "-" Term --sub
             | Term
 
