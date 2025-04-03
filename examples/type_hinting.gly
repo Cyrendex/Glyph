@@ -5,35 +5,47 @@ evoke our_func() -> void {
 }
 
 main = {
-  const var1: uint = 2;
-  const var2: ufloat = 3.14;
-  const var3: udecim = 123.456;
-  const var4: uslash = 5 / 2;
-  const var5: uslog = 1;
-  const var6: int = -42;
-  const var7: float = -3.14;
-  const var8: decim = -123.456;
-  const var9: slash = -5 / 2;
-  const var10: slog = -1;
-  const var11: bool = true;
-  const var12: string = "Hello World";
-  const var13: codepoint = '\u0041';
-  const var14: glyph = 'a';
 
+  /@ ALL BASIC TYPES @/
+
+  const var: int32 = 4/2;
+  /@const var1: uint32 = 2;@/
+  /@const var2: ufloat = 3.14;@/
+  /@const var3: udecim = 123.456;@/
+  /@const var4: uslash = 5 / 2;@/
+  /@const var5: uslog = 1;@/
+  const var6: int32 = -42;
+  /@const var7: float = -3.14;@/
+  /@const var8: decim = -123.456;@/
+  /@const var9: slash = -5 / 2;@/
+  /@const var10: slog = -1;@/
+  const var11: bool = true && true;
+  const var12: string = "Hello World";
+  /@const var13: codepoint = '\u0041';@/
+  /@const var14: glyph = 'a';@/
+
+
+  /@ ALL BASIC TYPES IN ARRAYS @/
   const var15: [[int32]] = [[8],[7]];
-  const var16: [[ufloat]] = [[1.1], [2.2]];
-  const var17: [[udecim]] = [[3.33], [4.44]];
-  const var18: [[uslash]] = [[5/2], [6/2]];
-  const var19: [[uslog]] = [[7], [8]];
-  const var20: [[int]] = [[9], [-10]];
-  const var21: [[float]] = [[-3.14], [6.28]];
-  const var22: [[decim]] = [[-123.456], [789.101]];
-  const var23: [[slash]] = [[-5/2], [6/3]];
-  const var24: [[slog]] = [[-1], [0]];
+  /@const var16: [[ufloat]] = [[1.1], [2.2]];@/
+  /@const var17: [[udecim]] = [[3.33], [4.44]];@/
+  /@const var18: [[uslash]] = [[5/2], [6/2]];@/
+  /@const var19: [[uslog]] = [[7], [8]];@/
+  const var20: [[int32]] = [[9], [-10]];
+  /@const var21: [[float]] = [[-3.14], [6.28]];@/
+  /@const var22: [[decim]] = [[-123.456], [789.101]];@/
+  /@const var23: [[slash]] = [[-5/2], [6/3]];@/
+  /@const var24: [[slog]] = [[-1], [0]];@/
   const var25: [[bool]] = [[true], [false]];
   const var26: [[string]] = [["foo"], ["bar"]];
-  const var27: [[codepoint]] = [['\u0041'], ['\u0042']];
-  const var28: [[glyph]] = [['a'], ['b']];
+  /@const var27: [[codepoint]] = [["\u0041"], ["\u0042"]];@/
+  /@const var28: [[glyph]] = [['a'], ['b']];@/
 
+
+  /@ TYPE MUTABILITY @/
+  let var29: int32 = 3;
+  var29 = 4;
+
+  /@ BASIC FUNCTION @/
   invoke our_func();
 }

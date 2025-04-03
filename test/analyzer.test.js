@@ -118,6 +118,18 @@ const semanticChecks = [
         }"
     ],
 
+    ["Function with exponentiation and multiple parameters",
+        " \
+        affix io@exscribe; \
+        evoke is_pythag_triple (a: uint8, b: uint8, c: uint8) -> bool \
+            = (a ** 2 + b ** 2 == c ** 2); \
+        \
+        main = { \
+            invoke exscribe is_pythag_triple (3, 4, 5); \
+            invoke exscribe is_pythag_triple (3, 4, 6); \
+        }"
+    ],
+
     ["Logical operations", 
         "\
         affix io@exscribe; \

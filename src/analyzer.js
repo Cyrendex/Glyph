@@ -266,6 +266,18 @@ export default function analyze(match) {
         Primary_parens(_open, exp, _close) {
             return exp.analyze();
         },
+        Condition_and(left, _op, right) {
+            const l = left.analyze();
+            const r = right.analyze();
+            check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
+            return core.binary("&&", l, r, core.booleanType);
+        },
+        Condition_or(left, _op, right) {
+            const l = left.analyze();
+            const r = right.analyze();
+            check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
+            return core.binary("||", l, r, core.booleanType);
+        },
         Condition_add(left, _op, right) {
             const l = left.analyze();
             const r = right.analyze();
@@ -310,6 +322,18 @@ export default function analyze(match) {
             const rightNode = right.analyze();
             const operator = _op.sourceString;
             return handleBinaryExpression(operator, result, rightNode, _op, isNumeric, "numbers");
+        },
+        Term_div(left, _op, right) {
+            const result = left.analyze();
+            const rightNode = right.analyze();
+            const operator = _op.sourceString;
+            check(!(BigInt(rightNode.value) === 0n), "Cannot divide by zero", _op);
+            return handleBinaryExpression(operator, result, rightNode, _op, isNumeric, "numbers");
+        },
+        Factor_neg(_op, base) {
+            const operand = base.analyze();
+            check(isNumeric(operand.type), "Unary minus only for numbers", _op);
+            return core.unary("-", operand, operand.type);
         },
         Factor_exp(base, _op, exponent) {
             const left = base.analyze();
@@ -675,15 +699,19 @@ export default function analyze(match) {
               type: core.glyphType,
             };
           },         
-        true(_) {
-            const boolVal = true;
-            boolVal.type = core.booleanType;
-            return boolVal;
+        Primary_true(_) {
+            return {
+                kind: "BooleanLiteral",
+                value: true,
+                type: core.booleanType
+            };
         },
-        false(_) {
-            const boolVal = false;
-            boolVal.type = core.booleanType;
-            return boolVal;
+        Primary_false(_) {
+            return {
+                kind: "BooleanLiteral",
+                value: false,
+                type: core.booleanType
+            };
         }
     }
     );

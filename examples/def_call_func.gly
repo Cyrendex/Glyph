@@ -2,7 +2,7 @@ affix io@exscribe;
 
 /@ numeric types can be partially genericized by dropping their size value @/
 evoke is_pythag_triple (a: uint8, b: uint8, c: uint8) -> bool 
-    = (a ** 2 + b ** 2 == c ** 2)
+    = (a ** 2 + b ** 2 == c ** 2);
 
 main = {
     invoke exscribe is_pythag_triple (3, 4, 5);
