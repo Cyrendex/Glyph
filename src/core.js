@@ -67,10 +67,6 @@ export function functionType(paramTypes, returnTypes) {
   return { kind: "FunctionType", paramTypes, returnTypes}
 }
 
-export function optionalType(baseType) {
-  return { kind: "OptionalType", baseType}
-}
-
 export function returnStatement(expression) {
   return { kind: "ReturnStatement", expression }
 }
