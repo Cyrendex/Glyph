@@ -1,8 +1,8 @@
 affix io@exscribe;
 
-/@evoke our_func1() -> void {
+evoke our_func1() -> void {
   exscribe "hi";
-}@/
+}
 
 evoke our_func2() -> int32 {
   const n: int32 = 1;
@@ -15,6 +15,10 @@ evoke our_func2() -> int32 {
       return n
     }
   }
+}
+
+evoke our_func3() -> int32 {
+  return 1
 }
 
 
@@ -31,7 +35,6 @@ main = {
   const var10: slog32 = -1;
   const var11: bool = true;
   const var12: string = "Hello World";
-  /@ const var13: codepoint = '\u0041'; @/
   const var14: glyph = 'a';
 
   const var15: [[int32]] = [[8],[7]];
@@ -46,9 +49,10 @@ main = {
   const var24: [[slog32]] = [[-1], [0]];
   const var25: [[bool]] = [[true], [false]];
   const var26: [[string]] = [["foo"], ["bar"]];
-  /@ const var27: [[codepoint]] = [['\u0041'], ['\u0042']]; @/
   const var28: [[glyph]] = [['a'], ['b']];
+  const var29: [int32] = []
 
   invoke our_func1();
   invoke our_func2();
+  invoke our_func3();
 }

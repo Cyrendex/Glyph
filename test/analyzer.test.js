@@ -210,7 +210,71 @@ const semanticChecks = [
         main = { \
             exscribe getArray(); \
         }"
-    ]
+    ],
+
+    ["Boolean literals usage", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let a: bool = true; \
+            let b: bool = false; \
+            if a && b { \
+                exscribe \"Boolean logic works!\"; \
+            } \
+        }"
+    ],
+
+    ["Break statement inside loop", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let counter: int32 = 5; \
+            while counter > 0 { \
+                if counter == 3 { \
+                    break; \
+                } \
+                exscribe counter; \
+                counter = counter - 1; \
+            } \
+        }"
+    ],
+
+    ["Correct parameter parsing", 
+        "\
+        affix io@exscribe; \
+        evoke add(x: int32, y: int32) -> int32 { return x + y } \
+        main = { \
+            exscribe add(2, 3); \
+        }"
+    ],
+
+    ["Valid glyph concatenation", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let glyph1: glyph = 'H'; \
+            let glyph2: glyph = 'W'; \
+            exscribe glyph1 + glyph2; \
+        }"
+    ],
+
+    ["Valid logical OR condition", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let x: bool = true; \
+            let y: bool = false; \
+            if x || y { \
+                exscribe \"Logical OR works!\"; \
+            } \
+        }"
+    ],
+
+    ["Function with no parameters", 
+        "\
+        affix io@exscribe; \
+        evoke greet() -> void { }"
+    ],
 ]
 
 const semanticErrors = [   
@@ -278,6 +342,18 @@ const semanticErrors = [
         "Function declaration requires a return type."
     ],
 
+    ["Logical OR with non-boolean types", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let x: int32 = 1; \
+            if x || false { \
+                exscribe 'This should fail'; \
+            } \
+        }", 
+        "Operands must be boolean"
+    ],
+
     ["Invalid operation between types", 
         "\
         affix io@exscribe; \
@@ -320,6 +396,17 @@ const semanticErrors = [
         "Return type mismatch; expected int32 but got string."
     ],
 
+    ["Invalid glyph concatenation", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let glyph1: glyph = 'Hello'; \
+            let number: int32 = 5; \
+            exscribe glyph1 + number; \
+        }", 
+        "Cannot concatenate glyph and int32."
+    ],
+
     ["Circular type aliasing", 
         "\
         type alias A = B; \
@@ -328,6 +415,25 @@ const semanticErrors = [
             let x: A = 5; \
         }", 
         "Circular type alias detected."
+    ],
+
+    ["Parameter type mismatch", 
+        "\
+        affix io@exscribe; \
+        add(x: int32, y: int32) = x + y; \
+        main = { \
+            exscribe add(2, 'string'); \
+        }", 
+        "Cannot pass a string to a function expecting int32."
+    ],
+
+    ["Break statement outside loop", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            break; \
+        }", 
+        "Break can only appear in a loop"
     ],
 
     ["Unterminated string literal", 
@@ -447,32 +553,36 @@ const semanticErrors = [
         ", 
         "Inconsistent return types; expected int32."
     ],
+
+    ["Type mismatch in boolean operation", 
+        "\
+        affix io@exscribe; \
+        main = { \
+            let x: int32 = 5; \
+            if x || true { \
+                exscribe 'This should fail'; \
+            } \
+        }", 
+        "Operands must be boolean"
+    ],
 ];
 
 
 
 describe("The analyzer", () => {
+
     console.log("Running " + semanticChecks.length + " semantic checks...")
     for (const [scenario, source] of semanticChecks) {
         it(`recognizes ${scenario}`, () => {
             assert.ok(analyze(parse(source)), (scenario + " should not throw"))
         })
     }
+
     console.log("Running " + semanticErrors.length + " semantic checks...")
     for (const [scenario, source, errorMessagePattern] of semanticErrors) {
         it(`throws on ${scenario}`, () => {
             assert.throws(() => analyze(parse(source)), errorMessagePattern)
         })
     }
-  // it("produces the expected representation for a trivial program", () => {
-  //   assert.deepEqual(
-  //     analyze(parse("let x = π + 2.2;")),
-  //     program([
-  //       variableDeclaration(
-  //         variable("x", true, floatType),
-  //         binary("+", variable("π", false, floatType), 2.2, floatType)
-  //       ),
-  //     ])
-  //   )
-  // })
+
 })

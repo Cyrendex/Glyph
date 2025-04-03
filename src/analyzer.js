@@ -5,50 +5,6 @@ const DEFAULT_INT_TYPE = "int32";
 const DEFAULT_FLOAT_TYPE = "float64";
 const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)|bool|string|glyph|codepoint|void|any)(\[\])*$/
 
-const numericTypeBounds = {
-    // Integers
-    int8: { min: -128n, max: 127n },
-    uint8: { min: 0n, max: 255n },
-    int16: { min: -32768n, max: 32767n },
-    uint16: { min: 0n, max: 65535n },
-    int32: { min: -2147483648n, max: 2147483647n },
-    uint32: { min: 0n, max: 4294967295n },
-    int64: { min: -9223372036854775808n, max: 9223372036854775807n },
-    uint64: { min: 0n, max: 18446744073709551615n },
-    int128: {
-        min: -170141183460469231731687303715884105728n,
-        max: 170141183460469231731687303715884105727n,
-    },
-    uint128: {
-        min: 0n,
-        max: 340282366920938463463374607431768211455n,
-    },
-
-    // Floats (approximate)
-    float32: { min: -3.4e38, max: 3.4e38 },
-    ufloat32: { min: 0, max: 3.4e38 },
-    float64: { min: -1.7e308, max: 1.7e308 },
-    ufloat64: { min: 0, max: 1.7e308 },
-
-    // Decim (fixed-point)
-    decim32: { min: -1e9, max: 1e9 },
-    udecim32: { min: 0, max: 1e9 },
-    decim64: { min: -1e18, max: 1e18 },
-    udecim64: { min: 0, max: 1e18 },
-
-    // Slash (fractions)
-    slash64: { min: -1e9, max: 1e9 },
-    uslash64: { min: 0, max: 1e9 },
-    slash128: { min: -1e18, max: 1e18 },
-    uslash128: { min: 0, max: 1e18 },
-
-    // Slog (scientific log type)
-    slog64: { min: -308, max: 308 },
-    uslog64: { min: 0, max: 308 },
-    slog128: { min: -308, max: 308 },
-    uslog128: { min: 0, max: 308 },
-};
-
 
 // Define bit sizes for each base type
 const bitSizes = ["8", "16", "32", "64", "128"];
@@ -119,9 +75,7 @@ function unwrapArrayType(type) {
 function canConvertArray(from, to, value) {
     if (!isArrayType(from) || !isArrayType(to)) return false;
     const fromElem = unwrapArrayType(from);
-    // console.log("fromElem", fromElem);
     const toElem = unwrapArrayType(to);
-    // console.log("toElem", toElem);
     if (!Array.isArray(value)) return canConvert(fromElem, toElem, undefined);
     return value.every(element =>
         Array.isArray(element)
@@ -171,6 +125,7 @@ function canConvert(from, to, value) {
 
     return false;
 }
+
 class Context {
     constructor(parent = null, inLoop = false, currentFunction = null) {
         this.parent = parent;
@@ -185,24 +140,13 @@ class Context {
         return this.locals.get(name) || (this.parent && this.parent.lookup(name));
     }
     newChildContext({ inLoop = false, currentFunction = null } = {}) {
-        // Inherit the current function context if not explicitly overridden
         const funcCtx = currentFunction !== null ? currentFunction : this.currentFunction;
         return new Context(this, inLoop, funcCtx);
     }
 }
 
 export default function analyze(match) {
-    const grammar = match.matcher.grammar;
-    let context = new Context();  // Start with an empty root context (no preloaded names)
-
-    // Type category helpers
-    const numericTypes = new Set([
-        core.intType, core.uintType,
-        core.floatType, core.ufloatType,
-        core.decimType, core.udecimType,
-        core.slashType, core.uslashType,
-        core.slogType, core.uslogType
-    ]);
+    let context = new Context();
 
     const textTypes = new Set([core.stringType, core.glyphType]);
 
@@ -306,6 +250,7 @@ export default function analyze(match) {
     function checkIsFunction(entity, node) {
         check(entity.kind === "Function", `${entity.name || node.sourceString} not a function`, node);
     }
+
     function checkArgumentCountAndTypes(parameters, args, node) {
         check(parameters.length === args.length,
             `Expected ${parameters.length} argument(s) but ${args.length} passed`,
@@ -316,7 +261,6 @@ export default function analyze(match) {
             const arg = args[i];
             const argType = arg.type;
             if (canConvert(argType, paramType, arg.value)) {
-                // Implicitly convert
                 arg.type = paramType;
             } else {
                 check(argType === paramType || paramType === core.anyType || argType === core.anyType,
@@ -350,23 +294,24 @@ export default function analyze(match) {
         _iter(...children) {
             return children.map(child => child.analyze());
         },
+
         Program(statements) {
             return core.program(statements.children.map(s => s.analyze()));
         },
+
         Stmt_exprstmt(exp, _semi) {
             return exp.analyze();
         },
-        MainStmt(_main, _eq, body) {
-            // Analyze the body (Exp | Stmt | Block)
-            const analyzedBody = body.analyze();
 
-            // Store or handle main entry point explicitly in your analyzer/core
+        MainStmt(_main, _eq, body) {
+            const analyzedBody = body.analyze();
             return core.mainStatement(analyzedBody);
         },
 
         FunctionBody_func(_eq, expression) {
             return [core.returnStatement(expression.analyze())];
         },
+
         FunctionBody_decl(block) {
             return block.analyze();
         },
@@ -374,18 +319,21 @@ export default function analyze(match) {
         Primary_parens(_open, exp, _close) {
             return exp.analyze();
         },
+
         Condition_and(left, _op, right) {
             const l = left.analyze();
             const r = right.analyze();
             check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
             return core.binary("&&", l, r, core.booleanType);
         },
+
         Condition_or(left, _op, right) {
             const l = left.analyze();
             const r = right.analyze();
             check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
             return core.binary("||", l, r, core.booleanType);
         },
+
         Condition_add(left, _op, right) {
             const l = left.analyze();
             const r = right.analyze();
@@ -406,9 +354,9 @@ export default function analyze(match) {
                 return core.binary("+", l, r, l.type);
             }
 
-            // Now it's numeric addition
             return handleBinaryExpression("+", l, r, _op, isNumeric, "numbers");
         },
+
         Condition_sub(left, _op, right) {
             const l = left.analyze();
             const r = right.analyze();
@@ -418,19 +366,20 @@ export default function analyze(match) {
 
             check(isNumeric(lType) && isNumeric(rType), "Operands must be numeric", _op);
 
-            // Prevent subtraction resulting in invalid values (e.g., uint - int)
             const resultMightUnderflow = lType.startsWith("u") && !rType.startsWith("u");
             check(!resultMightUnderflow, `Cannot subtract signed value from unsigned (${lType} - ${rType})`, _op);
 
             const resultType = areCompatible(lType, rType) ? lType : core.anyType;
             return core.binary("-", l, r, resultType);
         },
+
         Term_mul(left, _op, right) {
             const result = left.analyze();
             const rightNode = right.analyze();
             const operator = _op.sourceString;
             return handleBinaryExpression(operator, result, rightNode, _op, isNumeric, "numbers");
         },
+
         Term_div(left, _op, right) {
             const result = left.analyze();
             const rightNode = right.analyze();
@@ -438,12 +387,12 @@ export default function analyze(match) {
             check(!(BigInt(rightNode.value) === 0n), "Cannot divide by zero", _op);
             return handleBinaryExpression(operator, result, rightNode, _op, isNumeric, "numbers");
         },
+
         Factor_neg(_op, base) {
             const operand = base.analyze();
             check(isNumeric(operand.type), "Unary minus only for numbers", _op);
             const result = core.unary("-", operand, operand.type);
 
-            // Attach computed value if operand has one
             if ("value" in operand && (typeof operand.value === "number" || typeof operand.value === "bigint")) {
                 result.value = typeof operand.value === "bigint"
                     ? -operand.value
@@ -452,11 +401,13 @@ export default function analyze(match) {
 
             return result;
         },
+
         Factor_exp(base, _op, exponent) {
             const left = base.analyze();
             const right = exponent.analyze();
             return handleBinaryExpression("**", left, right, _op, isNumeric, "numbers");
         },
+
         Exp_relop(left, _op, right) {
             const l = left.analyze();
             const r = right.analyze();
@@ -481,10 +432,8 @@ export default function analyze(match) {
 
             if (callOrExp.numChildren > 0) {
                 if (callOrExp.ctorName === "Arguments") {
-                    // explicitly correct: callOrExp.child(1) is ListOf
                     args = callOrExp.child(1).asIteration().children.map(arg => arg.analyze());
                 } else {
-                    // Single expression case (no parentheses)
                     args = [callOrExp.analyze()];
                 }
             }
@@ -509,6 +458,7 @@ export default function analyze(match) {
             context.add(component, entity);
             return core.importStatement(module, [component]);
         },
+
         // Function declaration: evoke name(params) -> returnType { ... }
         EvokeStmt(_evoke, id, _open, paramList, _close, _arrow, returnType, block) {
             const name = id.sourceString;
@@ -543,27 +493,26 @@ export default function analyze(match) {
             }
           
             return core.functionDeclaration(funcEntity);
-          },
+        },
           
         type(_typeNode) {
             const typeName = this.sourceString;
             check(validTypeRegex.test(typeName), `Invalid type: ${typeName}`, this);
             return typeName;
         },
+
         // Parameter in a function declaration: name: Type (unwrap the id: type into just type)
         Parameter(id, typeOpt) {
             const name = id.sourceString;
             let typeStr;
 
             if (typeOpt.numChildren === 0) {
-                typeStr = core.anyType; // inferred/default type if missing
+                typeStr = core.anyType;
             } else {
-                // Explicitly unwrap the Type_hint node:
-                const typeHintNode = typeOpt.child(0); // ":" Type
+                const typeHintNode = typeOpt.child(0);
                 const actualTypeNode = typeHintNode.child(1);
                 typeStr = actualTypeNode.analyze();
 
-                // Safely unwrap array result if present
                 if (Array.isArray(typeStr)) {
                     typeStr = typeStr[0];
                 }
@@ -573,31 +522,34 @@ export default function analyze(match) {
             context.add(name, paramVar);
             return paramVar;
         },
+
         Type_array(_open, typeNode, _close) {
             const baseType = typeNode.analyze();
             check(baseType !== core.voidType, "Array elements cannot have type void", typeNode);
             return `${baseType}[]`;
         },
+
         Primary_subscript(arrayNode, _open, indexNode, _close) {
             const array = arrayNode.analyze();
             const index = indexNode.analyze();
 
             checkArrayIndexing(array, arrayNode, index, indexNode);
-            const elementType = array.type.replace(/\[\]$/, ""); // peel off one []
+            const elementType = array.type.replace(/\[\]$/, "");
             return core.subscript(array, index, elementType);
         },
+
         Type_hint(_colon, typeNode) {
-            return typeNode.analyze(); // directly delegate to type's analysis
+            return typeNode.analyze();
         },
+
         numericType(typeNode) {
             const literal = typeNode.sourceString;
             check(validTypeRegex.test(literal), `Invalid numeric type: ${literal}`, typeNode);
             return literal;
         },
 
-
         unsignedNumericType(typeName, bitsizeOpt) {
-            const baseType = typeName.sourceString; // explicitly "uint", "ufloat", etc.
+            const baseType = typeName.sourceString;
             const bitSize = bitsizeOpt.numChildren ? bitsizeOpt.sourceString : "";
             const typeStr = `${baseType}${bitSize}`;
             check(validTypeRegex.test(typeStr), `Invalid numeric type: ${typeStr}`, this);
@@ -605,7 +557,7 @@ export default function analyze(match) {
         },
 
         signedNumericType(typeName, bitsizeOpt) {
-            const baseType = typeName.sourceString; // explicitly "int", "float", etc.
+            const baseType = typeName.sourceString;
             const bitSize = bitsizeOpt.numChildren ? bitsizeOpt.sourceString : "";
             const typeStr = `${baseType}${bitSize}`;
             check(validTypeRegex.test(typeStr), `Invalid numeric type: ${typeStr}`, this);
@@ -634,33 +586,22 @@ export default function analyze(match) {
         ReturnStmt(_return, expr) {
             check(context.currentFunction, "Return can only appear inside a function", _return);
             const func = context.currentFunction;
-            // console.log(func)
             if (!func.returnHint) {
-                // No declared return type -> inference mode
                 if (expr.numChildren === 0) {
-                    // bare return
-                    if (!func.returnType) {
-                        func.returnType = core.voidType;
-                    } else if (func.returnType !== core.voidType) {
-                        // conflict: prior returns expected a value
-                        // console.log("first one")
-                        check(false, `Return statement in function ${func.name} ` +
-                            `missing a return value of type ${func.returnType}`, _return);
+                    if (func.returnType !== core.voidType) {
+                        check(false, `Return statement in function ${func.name} missing a return value of type ${func.returnType}`, _return);
                     }
                     return core.returnStatement(null);
                 } else {
-                    // return with a value
                     const returnValue = expr.analyze();
+                    console.log(returnValue)
                     if (!func.returnType || func.returnType === core.voidType) {
                         if (!func.returnType) {
-                            // first return with a value sets the return type
                             func.returnType = returnValue.type;
                         } else {
-                            // conflict: a previous return was void
                             check(false, "Return with a value in void function", expr);
                         }
                     } else {
-                        // ensure subsequent returns match the inferred type (or `any`)
                         check(
                             canConvert(returnValue.type, func.returnType, returnValue.value) ||
                             returnValue.type === core.anyType ||
@@ -672,11 +613,8 @@ export default function analyze(match) {
                     return core.returnStatement(returnValue);
                 }
             } else {
-                // Declared return type (existing behavior)
-                const expectedType = func.returnHint;  // the declared type
+                const expectedType = func.returnHint;
                 if (expr.numChildren === 0) {
-                    // no value provided, declared type must be void
-                    // console.log("second one")
                     check(expectedType === core.voidType,
                         `Return statement in function ${func.name} missing a return value of type ${expectedType}`,
                         _return);
@@ -695,6 +633,7 @@ export default function analyze(match) {
                 }
             }
         },
+
         // Variable declaration with type: (let/const) name: Type = expr;
         LetStmt(_let, decl) {
             const node = decl.analyze();
@@ -707,9 +646,11 @@ export default function analyze(match) {
             node.variable.mutable = false;
             return node;
         },
+
         NonemptyListOf(first, _sep, rest) {
             return [first.analyze(), ...rest.analyze()];
         },
+
         VarDec(id, maybeType, _eq, expr, _semi) {
             const name = id.sourceString;
             checkNotAlreadyDeclared(name, id);
@@ -719,12 +660,10 @@ export default function analyze(match) {
             if (maybeType.children.length === 0) {
                 typeStr = initial.type;
             } else {
-                const typeHintNode = maybeType.child(0); // ":" Type
-                const typeNode = typeHintNode.child(1);  // this is the actual Type
+                const typeHintNode = maybeType.child(0);
+                const typeNode = typeHintNode.child(1);
                 typeStr = typeNode.analyze();
                 check(validTypeRegex.test(typeStr), "Type expected", typeNode);
-                // console.log("inital.type", initial.type, "typeStr", typeStr);
-                // console.log("initial.value", initial.value, "initial", initial);
                 if (typeStr !== core.anyType) {
                     check(
                         canConvert(initial.type, typeStr, initial.value),
@@ -739,6 +678,7 @@ export default function analyze(match) {
             context.add(name, variable);
             return core.variableDeclaration(variable, initial);
         },
+        
         // Assignment: target = source;
         AssignmentStmt(id, _eq, expr, _semi) {
             const source = expr.analyze();
@@ -767,6 +707,7 @@ export default function analyze(match) {
             const alternate = falseBlock?.analyze() || [];  // handle optional else
             return core.ifStatement(condition, consequent, alternate);
         },
+
         // While loop statement
         WhileStmt(_while, testExpr, bodyBlock) {
             const condition = testExpr.analyze();
@@ -776,11 +717,13 @@ export default function analyze(match) {
             context = context.parent;
             return core.whileStatement(condition, body);
         },
+
         // Break statement: break;
         Stmt_break(breakKeyword, _semi) {
             check(context.inLoop, "Break can only appear in a loop", breakKeyword);
             return core.breakStatement;
         },
+
         // Block: { statements }
         Block(_open, statements, _close) {
             context = context.newChildContext({ inLoop: context.inLoop, currentFunction: context.currentFunction });
@@ -788,6 +731,7 @@ export default function analyze(match) {
             context = context.parent;
             return stmts;
         },
+
         // Array literal: [elements,...]
         Primary_array(_open, elems, _close) {
             const elements = elems.asIteration().children.map(e => e.analyze());
@@ -803,6 +747,7 @@ export default function analyze(match) {
                 value,
             };
         },
+
         // Identifier
         id(_first, _rest) {
             const name = this.sourceString;
@@ -810,6 +755,7 @@ export default function analyze(match) {
             checkDeclared(entity, name, this);
             return entity;
         },
+
         // Literals
         numeral(_digits, _dot, _frac, _e, _expSign, _exp) {
             const text = this.sourceString;
@@ -817,6 +763,7 @@ export default function analyze(match) {
                 ? { kind: "NumericLiteral", value: Number(text), type: DEFAULT_FLOAT_TYPE }
                 : { kind: "NumericLiteral", value: BigInt(text), type: DEFAULT_INT_TYPE };
         },
+
         stringlit(_open, _chars, _close) {
             return {
                 kind: "StringLiteral",
@@ -824,6 +771,7 @@ export default function analyze(match) {
                 type: core.stringType
             };
         },
+
         charlit(_open, charNode, _close) {
             const value = charNode.sourceString;
             return {
@@ -832,6 +780,7 @@ export default function analyze(match) {
                 type: core.glyphType,
             };
         },
+
         Primary_true(_) {
             return {
                 kind: "BooleanLiteral",
@@ -839,6 +788,7 @@ export default function analyze(match) {
                 type: core.booleanType
             };
         },
+
         Primary_false(_) {
             return {
                 kind: "BooleanLiteral",
@@ -846,8 +796,7 @@ export default function analyze(match) {
                 type: core.booleanType
             };
         }
-    }
-    );
+    });
 
     return semantics(match).analyze();
 }
