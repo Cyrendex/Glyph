@@ -33,7 +33,7 @@ Glyph is a language that enables backend developers to approach programming with
 
 | Glyph | JavaScript |
 |-------|-----------|
-| `affix io@exscribe`<br><br>`/@ numeric types can be partially genericized by dropping their size value@/`<br>`evoke is_pythag_triple (a, b, c: uint) -> bool`<br>`    = (a ** 2 + b ** 2 == c ** 2)`<br><br>`main = {`<br>`    invoke exscribe is_pythag_triple (3, 4, 5)`<br>`    invoke exscribe is_pythag_triple (3, 4, 6)`<br>`}` | `const is_pythag_triple = (a, b, c) => (a ** 2 + b ** 2 == c ** 2);`<br><br>`console.log(is_pythag_triple(3, 4, 5));`<br>`console.log(is_pythag_triple(3, 4, 6));` |
+| `affix io@exscribe`<br><br>`/@ numeric types can be partially genericized by dropping their size value@/`<br>`evoke is_pythag_triple (a, b, c: uint) -> bool`<br>`    = (a ** 2 + b ** 2 == c ** 2)`<br><br>`main = {`<br>`    exscribe is_pythag_triple (3, 4, 5)`<br>`    exscribe is_pythag_triple (3, 4, 6)`<br>`}` | `const is_pythag_triple = (a, b, c) => (a ** 2 + b ** 2 == c ** 2);`<br><br>`console.log(is_pythag_triple(3, 4, 5));`<br>`console.log(is_pythag_triple(3, 4, 6));` |
 | **Output** | **Output** |
 | `true`<br>`false` | `true`<br>`false` |
 

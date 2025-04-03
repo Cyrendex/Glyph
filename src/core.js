@@ -1,13 +1,13 @@
 export function program(statements) {
-    return { kind: "Program", statements }
+  return { kind: "Program", statements }
 }
   
 export function variableDeclaration(variable, initializer) {
   return { kind: "VariableDeclaration", variable, initializer }
 }
 
-export function variable(name, type) {
-  return { kind: "Variable", name, type }
+export function variable(name, type, initializer = null) {
+  return { kind: "Variable", name, type , initializer }
 }
 
 export const uintType = "uint";
@@ -49,18 +49,6 @@ export function whileStatement(condition, block) {
 
 export function ifStatement(condition, consequent, alternative) {
   return { kind: "IfStatement", condition, consequent, alternative}
-}
-
-// export function shortIfStatement(condition, consequent) {
-//   return { kind: "ShortIfStatement", condition, consequent }
-// }
-
-export function lambdaDeclaration(lambda, initializer) {
-  return { kind: "LambdaStatement", lambda, initializer }
-}
-
-export function lambda(name, params, body, type) {
-  return { kind: "Lambda", name, params, body, type}
 }
 
 export function functionDeclaration(fun) {
@@ -118,7 +106,6 @@ export function subscript(array, index, type) {
   };
 }
 
-
 export function arrayExpression(elements, type) {
   return {
     kind: "ArrayExpression",
@@ -128,44 +115,9 @@ export function arrayExpression(elements, type) {
 }
 
 export function functionCall(callee, args) {
-  if (callee.imported) {
-    // NMK: idk smth that makes it act normal
-  }
   return { kind: "FunctionCall", callee, args, type: callee.type.returnTypes}
 }
 
-// NMK: Don't know if we actually need these, Toal's suggestion for his lang
-// // These local constants are used to simplify the standard library definitions.
-// const floatToFloatType = functionType([floatType], floatType)
-// const floatFloatToFloatType = functionType([floatType, floatType], floatType)
-// const stringToIntsType = functionType([stringType], arrayType(intType))
-// const anyToVoidType = functionType([anyType], voidType)
-
-// NMK: Need to modify this to support our tomes (modules)
-// export const standardLibrary = Object.freeze({
-//   int: intType,
-//   float: floatType,
-//   boolean: boolType,
-//   string: stringType,
-//   void: voidType,
-//   any: anyType,
-//   π: variable("π", true, floatType),
-//   print: fun("print", anyToVoidType),
-//   sin: fun("sin", floatToFloatType),
-//   cos: fun("cos", floatToFloatType),
-//   exp: fun("exp", floatToFloatType),
-//   ln: fun("ln", floatToFloatType),
-//   hypot: fun("hypot", floatFloatToFloatType),
-//   bytes: fun("bytes", stringToIntsType),
-//   codepoints: fun("codepoints", stringToIntsType),
-// })
-
-
-// NMK: Again, Don't know if we need Toal's monkey patching but wdik
-// We want every expression to have a type property. But we aren't creating
-// special entities for numbers, strings, and booleans; instead, we are
-// just using JavaScript values for those. Fortunately we can monkey patch
-// the JS classes for these to give us what we want.
 String.prototype.type = stringType
 Number.prototype.type = floatType
 BigInt.prototype.type = intType

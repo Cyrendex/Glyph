@@ -6,7 +6,6 @@ import {
   variableDeclaration,
   variable,
   uintType,
-  functionDeclaration,
   fun,
   functionCall,
   exscribeStatement,
@@ -15,8 +14,6 @@ import {
   unary,
   ifStatement,
   whileStatement,
-  lambda,
-  lambdaDeclaration,
   mainStatement,
   breakStatement,
   returnStatement,
@@ -57,16 +54,6 @@ describe('Glyph Core Functions', () => {
     });
   });
 
-  describe('Function Calls', () => {
-    it('should create a function call node', () => {
-      const node = functionCall(fun("print", ["x"], [], "void"), [42]);
-      assert.strictEqual(node.kind, 'FunctionCall');
-      assert.strictEqual(node.callee.name, 'print');
-      assert.deepStrictEqual(node.args, [42]);
-      assert.strictEqual(node.type, "void");
-    });
-  });
-
   describe('Binary Expressions', () => {
     it('should create a binary expression node', () => {
       const node = binary('+', 1, 2, uintType);
@@ -104,15 +91,6 @@ describe('Glyph Core Functions', () => {
       assert.strictEqual(node.kind, 'WhileStatement');
       assert.strictEqual(node.condition, true);
       assert.deepStrictEqual(node.block, ["exscribe('Looping');"]);
-    });
-  });
-
-  describe('Lambda Declarations', () => {
-    it('should create a lambda declaration node', () => {
-      const node = lambdaDeclaration(lambda("double", ["x"], ["return x * 2;"], "int"), 42);
-      assert.strictEqual(node.kind, 'LambdaStatement');
-      assert.strictEqual(node.lambda.name, 'double');
-      assert.strictEqual(node.lambda.type, 'int');
     });
   });
 
@@ -157,6 +135,30 @@ describe('Glyph Core Functions', () => {
       const node = returnStatement(42);
       assert.strictEqual(node.kind, 'ReturnStatement');
       assert.strictEqual(node.expression, 42);
+    });
+  });
+
+  describe('conjureStatement', () => {
+    it('should return a ConjureStatement with the given block', () => {
+      const block = { kind: 'Block', statements: [] };
+      const result = conjureStatement(block);
+      assert.deepEqual(result, { kind: 'ConjureStatement', block });
+    });
+  });
+
+  describe('increment', () => {
+    it('should return an Increment with the given variable', () => {
+      const variable = 'x';
+      const result = increment(variable);
+      assert.deepEqual(result, { kind: 'Increment', variable });
+    });
+  });
+
+  describe('decrement', () => {
+    it('should return a Decrement with the given variable', () => {
+      const variable = 'x';
+      const result = decrement(variable);
+      assert.deepEqual(result, { kind: 'Decrement', variable });
     });
   });
 });

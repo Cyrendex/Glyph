@@ -125,8 +125,8 @@ const semanticChecks = [
             = (a ** 2 + b ** 2 == c ** 2); \
         \
         main = { \
-            invoke exscribe is_pythag_triple (3, 4, 5); \
-            invoke exscribe is_pythag_triple (3, 4, 6); \
+            exscribe is_pythag_triple (3, 4, 5); \
+            exscribe is_pythag_triple (3, 4, 6); \
         }"
     ],
 

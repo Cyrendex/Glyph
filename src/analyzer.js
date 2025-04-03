@@ -317,6 +317,18 @@ export default function analyze(match) {
             }
         }
     }
+    
+    function checkArrayIndexing(array, arrayNode, index, indexNode) {
+        check(isArrayType(array.type), "Only arrays can be subscripted", arrayNode);
+        check(isNumeric(index.type), "Array index must be a number", indexNode);
+        check(index.value >= 0n, "Array index must be non-negative", indexNode);
+        if (array.kind === "Variable") {
+            check(!(Number(index.value) > (array.initializer.elements.length-1)), "Array index out of bounds", indexNode);
+        } else if (array.kind === "SubscriptExpression") {
+            checkArrayIndexing(array.array, arrayNode, index, indexNode);
+        }
+    }
+
     function checkAllElementsHaveSameType(elements, node) {
         if (elements.length > 0) {
             const firstType = elements[0].type;
@@ -354,6 +366,18 @@ export default function analyze(match) {
 
         Primary_parens(_open, exp, _close) {
             return exp.analyze();
+        },
+        Condition_and(left, _op, right) {
+            const l = left.analyze();
+            const r = right.analyze();
+            check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
+            return core.binary("&&", l, r, core.booleanType);
+        },
+        Condition_or(left, _op, right) {
+            const l = left.analyze();
+            const r = right.analyze();
+            check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
+            return core.binary("||", l, r, core.booleanType);
         },
         Condition_add(left, _op, right) {
             const l = left.analyze();
@@ -410,7 +434,6 @@ export default function analyze(match) {
         Factor_neg(_op, base) {
             const operand = base.analyze();
             check(isNumeric(operand.type), "Unary minus only for numbers", _op);
-
             const result = core.unary("-", operand, operand.type);
 
             // Attach computed value if operand has one
@@ -549,9 +572,7 @@ export default function analyze(match) {
             const array = arrayNode.analyze();
             const index = indexNode.analyze();
 
-            check(isArrayType(array.type), "Only arrays can be subscripted", arrayNode);
-            check(isNumeric(index.type), "Array index must be a number", indexNode);
-
+            checkArrayIndexing(array, arrayNode, index, indexNode);
             const elementType = array.type.replace(/\[\]$/, ""); // peel off one []
             return core.subscript(array, index, elementType);
         },
@@ -700,7 +721,7 @@ export default function analyze(match) {
 
             }
 
-            const variable = core.variable(name, typeStr);
+            const variable = core.variable(name, typeStr, initial);
             context.add(name, variable);
             return core.variableDeclaration(variable, initial);
         },
