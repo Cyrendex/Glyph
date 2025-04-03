@@ -73,7 +73,7 @@ const semanticChecks = [
     ["Function with parameters", 
         "\
         affix io@exscribe; \
-        evoke add(a: int32, b: int32) -> int32 = (a + b); \
+        evoke add(a: int32, b: int32) -> int32 { return (a + b) } \
         main = { \
             exscribe add(2, 3); \
         }"
@@ -93,8 +93,8 @@ const semanticChecks = [
     ["Nested function calls", 
         "\
         affix io@exscribe; \
-        evoke square(x: int32) -> int32 = (x * x); \
-        evoke sum(a: int32, b: int32) -> int32 = (a + b); \
+        evoke square(x: int32) -> int32 { return (x * x) } \
+        evoke sum(a: int32, b: int32) -> int32 { return (a + b) }\
         main = { \
             exscribe sum(square(3), square(4)); \
         }"
@@ -112,7 +112,7 @@ const semanticChecks = [
     ["Function with multiple parameters", 
         "\
         affix io@exscribe; \
-        evoke multiply(a: int32, b: int32, c: int32) -> int32 = (a * b * c); \
+        evoke multiply(a: int32, b: int32, c: int32) -> int32 { return (a * b * c) }\
         main = { \
             exscribe multiply(2, 3, 4); \
         }"
@@ -121,9 +121,9 @@ const semanticChecks = [
     ["Function with exponentiation and multiple parameters",
         " \
         affix io@exscribe; \
-        evoke is_pythag_triple (a: uint8, b: uint8, c: uint8) -> bool \
-            = (a ** 2 + b ** 2 == c ** 2); \
-        \
+        evoke is_pythag_triple (a: uint8, b: uint8, c: uint8) -> bool {\
+            return (a ** 2 + b ** 2 == c ** 2) \
+        }\
         main = { \
             exscribe is_pythag_triple (3, 4, 5); \
             exscribe is_pythag_triple (3, 4, 6); \

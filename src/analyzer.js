@@ -119,9 +119,9 @@ function unwrapArrayType(type) {
 function canConvertArray(from, to, value) {
     if (!isArrayType(from) || !isArrayType(to)) return false;
     const fromElem = unwrapArrayType(from);
-    console.log("fromElem", fromElem);
+    // console.log("fromElem", fromElem);
     const toElem = unwrapArrayType(to);
-    console.log("toElem", toElem);
+    // console.log("toElem", toElem);
     if (!Array.isArray(value)) return canConvert(fromElem, toElem, undefined);
     return value.every(element =>
         Array.isArray(element)
@@ -214,15 +214,17 @@ export default function analyze(match) {
     }
 
     function hasReturn(node) {
-        if (node.kind === "ReturnStatement") return true;
-        if (node.kind === "IfStatement") {
-          return hasReturn(node.consequent) && hasReturn(node.alternative);
-        }
-        if (node.kind === "Block") {
-          return node.statements.some(hasReturn);
+        for (let i in node) {
+            if (node[i].kind === "ReturnStatement") return true;
+            if (node[i].kind === "IfStatement") {
+              return hasReturn(node[i].consequent) && hasReturn(node[i].alternative.flat());
+            }
+            if (node[i].kind === "Block") {
+                return node[i].statements.some(hasReturn);
+            }
         }
         return false;
-      }
+    }
       
     function areCompatible(t1, t2) {
         if (t1 === t2 || t1 === core.anyType || t2 === core.anyType) {
@@ -537,7 +539,7 @@ export default function analyze(match) {
             funcEntity.body = body;
           
             if (returnTypeStr !== core.voidType) {
-              check(hasReturn(body), `Missing return in function '${name}' that returns ${returnTypeStr}`, id);
+                check(hasReturn(body), `Missing return in function '${name}' that returns ${returnTypeStr}`, id);
             }
           
             return core.functionDeclaration(funcEntity);
@@ -632,6 +634,7 @@ export default function analyze(match) {
         ReturnStmt(_return, expr) {
             check(context.currentFunction, "Return can only appear inside a function", _return);
             const func = context.currentFunction;
+            // console.log(func)
             if (!func.returnHint) {
                 // No declared return type -> inference mode
                 if (expr.numChildren === 0) {
@@ -640,6 +643,7 @@ export default function analyze(match) {
                         func.returnType = core.voidType;
                     } else if (func.returnType !== core.voidType) {
                         // conflict: prior returns expected a value
+                        // console.log("first one")
                         check(false, `Return statement in function ${func.name} ` +
                             `missing a return value of type ${func.returnType}`, _return);
                     }
@@ -672,6 +676,7 @@ export default function analyze(match) {
                 const expectedType = func.returnHint;  // the declared type
                 if (expr.numChildren === 0) {
                     // no value provided, declared type must be void
+                    // console.log("second one")
                     check(expectedType === core.voidType,
                         `Return statement in function ${func.name} missing a return value of type ${expectedType}`,
                         _return);
@@ -718,8 +723,8 @@ export default function analyze(match) {
                 const typeNode = typeHintNode.child(1);  // this is the actual Type
                 typeStr = typeNode.analyze();
                 check(validTypeRegex.test(typeStr), "Type expected", typeNode);
-                console.log("inital.type", initial.type, "typeStr", typeStr);
-                console.log("initial.value", initial.value, "initial", initial);
+                // console.log("inital.type", initial.type, "typeStr", typeStr);
+                // console.log("initial.value", initial.value, "initial", initial);
                 if (typeStr !== core.anyType) {
                     check(
                         canConvert(initial.type, typeStr, initial.value),
