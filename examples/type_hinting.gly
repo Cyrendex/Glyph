@@ -5,34 +5,34 @@ evoke our_func() -> void {
 }
 
 main = {
-  const var1: uint = 2;
-  const var2: ufloat = 3.14;
-  const var3: udecim = 123.456;
-  const var4: uslash = 5 / 2;
-  const var5: uslog = 1;
-  const var6: int = -42;
-  const var7: float = -3.14;
-  const var8: decim = -123.456;
-  const var9: slash = -5 / 2;
-  const var10: slog = -1;
+  const var1: uint8 = 2;
+  const var2: ufloat32 = 3.14;
+  const var3: udecim16 = 123.456;
+  const var4: uslash128 = 5 / 2;
+  const var5: uslog32 = 1;
+  const var6: int8 = -42;
+  const var7: float16 = -3.14;
+  const var8: decim64 = -123.456;
+  const var9: slash32 = -5 / 2;
+  const var10: slog32 = -1;
   const var11: bool = true;
   const var12: string = "Hello World";
-  const var13: codepoint = '\u0041';
+  /@ const var13: codepoint = '\u0041'; @/
   const var14: glyph = 'a';
 
   const var15: [[int32]] = [[8],[7]];
-  const var16: [[ufloat]] = [[1.1], [2.2]];
-  const var17: [[udecim]] = [[3.33], [4.44]];
-  const var18: [[uslash]] = [[5/2], [6/2]];
-  const var19: [[uslog]] = [[7], [8]];
-  const var20: [[int]] = [[9], [-10]];
-  const var21: [[float]] = [[-3.14], [6.28]];
-  const var22: [[decim]] = [[-123.456], [789.101]];
-  const var23: [[slash]] = [[-5/2], [6/3]];
-  const var24: [[slog]] = [[-1], [0]];
+  const var16: [[ufloat16]] = [[1.1], [2.2]];
+  const var17: [[udecim32]] = [[3.33], [4.44]];
+  const var18: [[uslash16]] = [[5/2], [6/2]];
+  const var19: [[uslog32]] = [[7], [8]];
+  const var20: [[int32]] = [[9], [-10]];
+  const var21: [[float32]] = [[-3.14], [6.28]];
+  const var22: [[decim32]] = [[-123.456], [789.101]];
+  const var23: [[slash32]] = [[-5/2], [6/3]];
+  const var24: [[slog32]] = [[-1], [0]];
   const var25: [[bool]] = [[true], [false]];
   const var26: [[string]] = [["foo"], ["bar"]];
-  const var27: [[codepoint]] = [['\u0041'], ['\u0042']];
+  /@ const var27: [[codepoint]] = [['\u0041'], ['\u0042']]; @/
   const var28: [[glyph]] = [['a'], ['b']];
 
   invoke our_func();
