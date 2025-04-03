@@ -50,7 +50,7 @@ main = {
   const var25: [[bool]] = [[true], [false]];
   const var26: [[string]] = [["foo"], ["bar"]];
   const var28: [[glyph]] = [['a'], ['b']];
-  const var29: [int32] = []
+  const var29: [int32] = [];
 
   invoke our_func1();
   invoke our_func2();
