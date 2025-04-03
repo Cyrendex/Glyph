@@ -131,7 +131,7 @@ Glyph {
 
   numeral = digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?
   stringlit = "\"" (~"\"" any)* "\""
-  charlit = "'" (~"\"" any) "'"
+  charlit = "'" (~"\'" any) "'"
 
   relop = "<=" | "<" | "==" | "!=" | ">=" | ">"
 

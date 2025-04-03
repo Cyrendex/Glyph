@@ -71,7 +71,7 @@ function unwrapArrayType(type) {
 
 function canConvert(from, to, value) {
   if (from === to) return true;
-
+  if (from === "glyph" && to === "string") return true;
   // Check for array types
   if (isArrayType(from) && isArrayType(to)) {
     // Unwrap one level of array (e.g., int8[][] -> int8[])
@@ -143,7 +143,10 @@ export default function analyze(match) {
     function isText(type) {
         return textTypes.has(type);
     }
-    
+    function isGlyph(type) {
+        return type === core.glyphType;
+    }
+
     function checkImportedFunction(name, node) {
         const entity = context.lookup(name);
         check(entity, `Function '${name}' must be imported before use`, node);
@@ -273,7 +276,11 @@ export default function analyze(match) {
             const rIsText = isText(r.type);
         
             check(!(lIsNum && rIsText) && !(lIsText && rIsNum), "Cannot add text and number", _op);
-        
+            
+            if(lIsText && isGlyph(r.type) || isGlyph(l.type) && rIsText) {
+                return core.binary("+", l, r, core.stringType);
+            }
+
             if (lIsText && rIsText) {
                 check(l.type === r.type, "Cannot add string to glyph", _op);
                 return core.binary("+", l, r, l.type);
@@ -660,6 +667,14 @@ export default function analyze(match) {
                 type: core.stringType
             };
         },
+        charlit(_open, charNode, _close) {
+            const value = charNode.sourceString;
+            return {
+              kind: "GlyphLiteral",
+              value,
+              type: core.glyphType,
+            };
+          },         
         true(_) {
             const boolVal = true;
             boolVal.type = core.booleanType;

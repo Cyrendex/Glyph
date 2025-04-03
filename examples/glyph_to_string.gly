@@ -1,0 +1,8 @@
+affix io@exscribe;
+
+const gly1: glyph = 'a';
+let gly2: glyph = 'b';
+let str: string = gly1 + gly2;
+main = {
+  exscribe str;
+}
