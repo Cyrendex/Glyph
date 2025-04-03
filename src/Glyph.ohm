@@ -102,17 +102,17 @@ Glyph {
   type = (numericType | bool | string | codepoint | glyph | void) ~idchar
   numericType = unsignedNumericType | signedNumericType
 
-  unsignedNumericType = "uint" bitsizes128?
-                       | "ufloat" bitsizes64?
-                       | "udecim" bitsizes64?
-                       | "uslash" bitsizes128?
-                       | "uslog" bitsizes128?
+  unsignedNumericType = "uint" bitsizes128
+                       | "ufloat" bitsizes64
+                       | "udecim" bitsizes64
+                       | "uslash" bitsizes128
+                       | "uslog" bitsizes128
 
-  signedNumericType = "int" bitsizes128?
-                     | "float" bitsizes64?
-                     | "decim" bitsizes64?
-                     | "slash" bitsizes128?
-                     | "slog" bitsizes128?
+  signedNumericType = "int" bitsizes128
+                     | "float" bitsizes64
+                     | "decim" bitsizes64
+                     | "slash" bitsizes128
+                     | "slog" bitsizes128
 
   bool = "bool"
   string = "string"

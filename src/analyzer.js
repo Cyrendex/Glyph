@@ -135,37 +135,38 @@ function canConvert(from, to, value) {
     if (from === "glyph" && to === "string") return true;
 
     if (isArrayType(from) && isArrayType(to)) {
-        console.log(from, "and", to, "are arrays");
         return canConvertArray(from, to, value);
     }
 
     if (isNumeric(from) && isNumeric(to)) {
         const f = parseNumericBits(from);
         const t = parseNumericBits(to);
-        console.log("f", f, "t", t);
+
         if (!f || !t) return false;
 
         if (f.bits < t.bits) return true;
+        const fractionalBases = ["float", "decim", "slash", "slog"];
+        const isFractional = base => fractionalBases.includes(base);
 
-        if (f.bits >= t.bits) {
-            console.log("value is", value, "and the type is", typeof value)
+        if (f.bits >= t.bits && (!isFractional(f.base) || isFractional(t.base))) {
+
             if (typeof value !== "number" && typeof value !== "bigint") return false;
-          
+
             let min, max;
             if (t.unsigned) {
-              min = BigInt(0);
-              max = BigInt(2 ** t.bits - 1);
+                min = BigInt(0);
+                max = BigInt(2 ** t.bits - 1);
             } else {
-              min = BigInt(-(2 ** (t.bits - 1)));
-              max = BigInt(2 ** (t.bits - 1) - 1);
+                min = BigInt(-(2 ** (t.bits - 1)));
+                max = BigInt(2 ** (t.bits - 1) - 1);
             }
-          
+
             const numericValue =
-              typeof value === "bigint" ? value : BigInt(Math.floor(value));
-          
+                typeof value === "bigint" ? value : BigInt(Math.floor(value));
+
             return numericValue >= min && numericValue <= max;
-          }
-          
+        }
+
     }
 
     return false;
@@ -212,13 +213,17 @@ export default function analyze(match) {
         return type === core.glyphType;
     }
 
-    function checkImportedFunction(name, node) {
-        const entity = context.lookup(name);
-        check(entity, `Function '${name}' must be imported before use`, node);
-        checkIsFunction(entity, node);
-        return entity;
-    }
-
+    function hasReturn(node) {
+        if (node.kind === "ReturnStatement") return true;
+        if (node.kind === "IfStatement") {
+          return hasReturn(node.consequent) && hasReturn(node.alternative);
+        }
+        if (node.kind === "Block") {
+          return node.statements.some(hasReturn);
+        }
+        return false;
+      }
+      
     function areCompatible(t1, t2) {
         if (t1 === t2 || t1 === core.anyType || t2 === core.anyType) {
             return true;
@@ -317,13 +322,13 @@ export default function analyze(match) {
             }
         }
     }
-    
+
     function checkArrayIndexing(array, arrayNode, index, indexNode) {
         check(isArrayType(array.type), "Only arrays can be subscripted", arrayNode);
         check(isNumeric(index.type), "Array index must be a number", indexNode);
         check(index.value >= 0n, "Array index must be non-negative", indexNode);
         if (array.kind === "Variable") {
-            check(!(Number(index.value) > (array.initializer.elements.length-1)), "Array index out of bounds", indexNode);
+            check(!(Number(index.value) > (array.initializer.elements.length - 1)), "Array index out of bounds", indexNode);
         } else if (array.kind === "SubscriptExpression") {
             checkArrayIndexing(array.array, arrayNode, index, indexNode);
         }
@@ -506,35 +511,38 @@ export default function analyze(match) {
         EvokeStmt(_evoke, id, _open, paramList, _close, _arrow, returnType, block) {
             const name = id.sourceString;
             checkNotAlreadyDeclared(name, id);
-
+          
             const returnTypeStr = returnType.sourceString;
-
-            // Create and assign a placeholder type before analyzing anything else
+          
             const placeholderParams = [];
             const placeholderType = core.functionType(placeholderParams, returnTypeStr);
             const funcEntity = core.fun(name, placeholderParams, null, returnTypeStr);
             funcEntity.type = placeholderType;
-
-            // Add early to allow recursive lookup
+          
             context.add(name, funcEntity);
-
-            // Start analyzing in new function scope
+          
             context = context.newChildContext({ currentFunction: funcEntity });
-
+          
             let params = [];
             if (paramList.numChildren > 0) {
-                params = paramList.child(0).asIteration().children.map(param => param.analyze());
+              params = paramList.child(0).asIteration().children.map(param => param.analyze());
             }
-
+          
             funcEntity.parameters = params;
-            funcEntity.type.paramTypes = params.map(p => p.type); // Update placeholder types
-
+            funcEntity.type.paramTypes = params.map(p => p.type);
+          
             const body = block.analyze();
             context = context.parent;
-
+          
             funcEntity.body = body;
+          
+            if (returnTypeStr !== core.voidType) {
+              check(hasReturn(body), `Missing return in function '${name}' that returns ${returnTypeStr}`, id);
+            }
+          
             return core.functionDeclaration(funcEntity);
-        },
+          },
+          
         type(_typeNode) {
             const typeName = this.sourceString;
             check(validTypeRegex.test(typeName), `Invalid type: ${typeName}`, this);
@@ -710,7 +718,8 @@ export default function analyze(match) {
                 const typeNode = typeHintNode.child(1);  // this is the actual Type
                 typeStr = typeNode.analyze();
                 check(validTypeRegex.test(typeStr), "Type expected", typeNode);
-
+                console.log("inital.type", initial.type, "typeStr", typeStr);
+                console.log("initial.value", initial.value, "initial", initial);
                 if (typeStr !== core.anyType) {
                     check(
                         canConvert(initial.type, typeStr, initial.value),
@@ -729,7 +738,6 @@ export default function analyze(match) {
         AssignmentStmt(id, _eq, expr, _semi) {
             const source = expr.analyze();
             const target = id.analyze();
-
             check(target && target.kind === "Variable", `${id.sourceString} not declared`, id);
             if (target.mutable !== undefined) {
                 check(target.mutable, `Cannot assign to constant ${target.name}`, id);
@@ -780,7 +788,15 @@ export default function analyze(match) {
             const elements = elems.asIteration().children.map(e => e.analyze());
             checkAllElementsHaveSameType(elements, _open);
             const elemType = elements.length === 0 ? core.anyType : elements[0].type;
-            return core.arrayExpression(elements, `${elemType}[]`);
+
+            const value = elements.map(e =>
+                "value" in e ? e.value : Array.isArray(e.elements) ? e.elements.map(el => el.value) : undefined
+            );
+
+            return {
+                ...core.arrayExpression(elements, `${elemType}[]`),
+                value,
+            };
         },
         // Identifier
         id(_first, _rest) {
