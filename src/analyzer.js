@@ -3,9 +3,53 @@ import { standardLibrary } from "./std-lib.js";
 
 const DEFAULT_INT_TYPE = "int32";
 const DEFAULT_FLOAT_TYPE = "float64";
-const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)?|bool|string|glyph|codepoint|void|any)(\[\])*$/
+const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)|bool|string|glyph|codepoint|void|any)(\[\])*$/
 
+const numericTypeBounds = {
+    // Integers
+    int8: { min: -128n, max: 127n },
+    uint8: { min: 0n, max: 255n },
+    int16: { min: -32768n, max: 32767n },
+    uint16: { min: 0n, max: 65535n },
+    int32: { min: -2147483648n, max: 2147483647n },
+    uint32: { min: 0n, max: 4294967295n },
+    int64: { min: -9223372036854775808n, max: 9223372036854775807n },
+    uint64: { min: 0n, max: 18446744073709551615n },
+    int128: {
+      min: -170141183460469231731687303715884105728n,
+      max: 170141183460469231731687303715884105727n,
+    },
+    uint128: {
+      min: 0n,
+      max: 340282366920938463463374607431768211455n,
+    },
+  
+    // Floats (approximate)
+    float32: { min: -3.4e38, max: 3.4e38 },
+    ufloat32: { min: 0, max: 3.4e38 },
+    float64: { min: -1.7e308, max: 1.7e308 },
+    ufloat64: { min: 0, max: 1.7e308 },
+  
+    // Decim (fixed-point)
+    decim32: { min: -1e9, max: 1e9 },
+    udecim32: { min: 0, max: 1e9 },
+    decim64: { min: -1e18, max: 1e18 },
+    udecim64: { min: 0, max: 1e18 },
+  
+    // Slash (fractions)
+    slash64: { min: -1e9, max: 1e9 },
+    uslash64: { min: 0, max: 1e9 },
+    slash128: { min: -1e18, max: 1e18 },
+    uslash128: { min: 0, max: 1e18 },
+  
+    // Slog (scientific log type)
+    slog64: { min: -308, max: 308 },
+    uslog64: { min: 0, max: 308 },
+    slog128: { min: -308, max: 308 },
+    uslog128: { min: 0, max: 308 },
+  };
 
+  
 // Define bit sizes for each base type
 const bitSizes = ["8", "16", "32", "64", "128"];
 const numericBases = ["int", "uint", "float", "decim", "slash", "slog"];
@@ -58,50 +102,54 @@ function isArrayType(type) {
   return type.endsWith("[]");
 }
 
-function checkImportedFunction(name, node) {
-    const entity = context.lookup(name);
-    check(entity, `Function '${name}' must be imported before use`, node);
-    checkIsFunction(entity, node);
-    return entity;
-}
-
 function unwrapArrayType(type) {
   return type.substring(0, type.length - 2); // removes rightmost []
 }
 
 function canConvert(from, to, value) {
-  if (from === to) return true;
-  if (from === "glyph" && to === "string") return true;
-  // Check for array types
-  if (isArrayType(from) && isArrayType(to)) {
-    // Unwrap one level of array (e.g., int8[][] -> int8[])
-    const innerFrom = unwrapArrayType(from);
-    const innerTo = unwrapArrayType(to);
-    
-    // Recursively check if the inner types are convertible
-    return canConvert(innerFrom, innerTo, undefined);
-  }
-
-  // Base case for primitive types (existing numeric logic)
-  if (isNumeric(from) && isNumeric(to)) {
-    if (implicitNumericConversions.has(from) && 
-        implicitNumericConversions.get(from).has(to)) {
-      return true;
+    if (from === to) return true;
+    if (from === "glyph" && to === "string") return true;
+  
+    // Handle arrays
+    if (isArrayType(from) && isArrayType(to)) {
+      const innerFrom = unwrapArrayType(from);
+      const innerTo = unwrapArrayType(to);
+      return canConvert(innerFrom, innerTo, undefined);
     }
-    
-    // Special case for signed -> unsigned (need positive value)
-    const fromIsUnsigned = from.startsWith("u");
-    const toIsUnsigned = to.startsWith("u");
-    
-    if (!fromIsUnsigned && toIsUnsigned) {
-      return typeof value === 'bigint' || typeof value === 'number'
-        ? value >= 0
-        : false;
+  
+    if (!isNumeric(from) || !isNumeric(to)) return false;
+  
+    // Get base and size
+    const fromMatch = from.match(/^(u?)([a-z]+)(\d+)$/);
+    const toMatch = to.match(/^(u?)([a-z]+)(\d+)$/);
+    if (!fromMatch || !toMatch) return false;
+  
+    const [, fromUnsigned, fromBase, fromBitsStr] = fromMatch;
+    const [, toUnsigned, toBase, toBitsStr] = toMatch;
+  
+    const fromBits = Number(fromBitsStr);
+    const toBits = Number(toBitsStr);
+    const valueIsPositive = typeof value === "number" || typeof value === "bigint" ? value >= 0 : false;
+  
+    // Disallow signed → unsigned for negative values
+    if (!fromUnsigned && toUnsigned && !valueIsPositive) return false;
+  
+    // Allow widening
+    if (fromBits <= toBits) return true;
+  
+    // Allow narrowing if value fits
+    if (fromBits > toBits) {
+      if (typeof value === "number" || typeof value === "bigint") {
+        const max = 2 ** toBits - 1;
+        const min = toUnsigned ? 0 : -(2 ** (toBits - 1));
+        return value >= min && value <= max;
+      }
     }
+  
+    return false;
   }
-
-  return false;
-}
+  
+  
   
 
 
@@ -580,9 +628,13 @@ export default function analyze(match) {
                 check(validTypeRegex.test(typeStr), "Type expected", typeNode);
 
                 if (typeStr !== core.anyType) {
-                    check(initial.type === typeStr || initial.type === core.anyType,
-                        `Cannot assign ${initial.type} to ${typeStr}`, id);
-                }
+                    check(
+                      canConvert(initial.type, typeStr, initial.value),
+                      `Cannot assign ${initial.type} to ${typeStr}`,
+                      id
+                    );
+                  }
+                  
             }
         
             const variable = core.variable(name, typeStr);
