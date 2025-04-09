@@ -1,3 +1,3 @@
-export default function optimize(sourceCode) {
-    throw new Error("Not implemented!")
+export default function optimize(node) {
+    return node
 }
