@@ -158,6 +158,10 @@ export default function analyze(match) {
         return type === core.glyphType;
     }
 
+    function isVoid(type) {
+        return type === core.voidType;
+    }
+
     function hasReturn(node) {
         for (let i in node) {
             if (node[i].kind === "ReturnStatement") return true;
@@ -254,6 +258,8 @@ export default function analyze(match) {
     function checkIsFunction(entity, node) {
         check(entity.kind === "Function", `${entity.name || node.sourceString} not a function`, node);
     }
+
+
 
     function checkArgumentCountAndTypes(parameters, args, node) {
         check(parameters.length === args.length,
@@ -425,6 +431,7 @@ export default function analyze(match) {
 
             return core.binary(o, l, r, core.booleanType);
         },
+
         Primary_functionCall(id, callOrExp) {
             const calleeName = id.sourceString;
             const callee = context.lookup(calleeName);
@@ -589,55 +596,45 @@ export default function analyze(match) {
         
         // Return statement: return expr?;
         ReturnStmt(_return, expr) {
+            // Ensure we're inside a function
             check(context.currentFunction, "Return can only appear inside a function", _return);
             const func = context.currentFunction;
-            if (!func.returnHint) {
-                if (expr.numChildren === 0) {
-                    if (func.returnType !== core.voidType) {
-                        check(false, `Return statement in function ${func.name} missing a return value of type ${func.returnType}`, _return);
-                    }
-                    return core.returnStatement(null);
-                } else {
-                    const returnValue = expr.analyze();
-                    console.log(returnValue)
-                    if (!func.returnType || func.returnType === core.voidType) {
-                        if (!func.returnType) {
-                            func.returnType = returnValue.type;
-                        } else {
-                            check(false, "Return with a value in void function", expr);
-                        }
-                    } else {
-                        check(
-                            canConvert(returnValue.type, func.returnType, returnValue.value) ||
-                            returnValue.type === core.anyType ||
-                            func.returnType === core.anyType,
-                            `Expected return type ${func.returnType} but got ${returnValue.type}`,
-                            expr
-                        );
-                    }
-                    return core.returnStatement(returnValue);
-                }
+
+            const expectedType = func.returnHint || func.returnType;
+            const isVoid = expectedType === core.voidType;
+            const hasExpr = expr.numChildren > 0;
+
+            // Handle `return;` (no return value)
+            if (!hasExpr) {
+                check(isVoid, `Return statement in function ${func.name} missing a return value of type ${expectedType}`, _return);
+                return core.returnStatement(null);
+            }
+
+            // Handle `return expr;`
+            const returnValue = expr.analyze();
+
+            if (func.returnHint) {
+                check(!isVoid, "Return with a value in void function", expr);
             } else {
-                const expectedType = func.returnHint;
-                if (expr.numChildren === 0) {
-                    check(expectedType === core.voidType,
-                        `Return statement in function ${func.name} missing a return value of type ${expectedType}`,
-                        _return);
-                    return core.returnStatement(null);
+                if (!func.returnType) {
+                    func.returnType = returnValue.type;
                 } else {
-                    const returnValue = expr.analyze();
-                    check(expectedType !== core.voidType, "Return with a value in void function", expr);
-                    check(
-                        canConvert(returnValue.type, expectedType, returnValue.value) ||
-                        returnValue.type === core.anyType ||
-                        expectedType === core.anyType,
-                        `Expected return type ${expectedType} but got ${returnValue.type}`,
-                        expr
-                    );
-                    return core.returnStatement(returnValue);
+                    check(!isVoid, "Return with a value in void function", expr);
                 }
             }
+
+            // Ensure the returned type matches the expected one
+            check(
+                canConvert(returnValue.type, expectedType, returnValue.value) ||
+                returnValue.type === core.anyType ||
+                expectedType === core.anyType,
+                `Expected return type ${expectedType} but got ${returnValue.type}`,
+                expr
+            );
+
+            return core.returnStatement(returnValue);
         },
+
 
         // Variable declaration with type: (let/const) name: Type = expr;
         LetStmt(_let, decl) {
