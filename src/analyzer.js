@@ -153,6 +153,7 @@ export default function analyze(match) {
     function isText(type) {
         return textTypes.has(type);
     }
+
     function isGlyph(type) {
         return type === core.glyphType;
     }
@@ -241,12 +242,15 @@ export default function analyze(match) {
             throw new Error(`${prefix}${message}`);
         }
     }
+
     function checkNotAlreadyDeclared(name, node) {
         check(!context.lookup(name), `Identifier ${name} already declared`, node);
     }
+
     function checkDeclared(entity, name, node) {
         check(entity, `Identifier ${name} not declared`, node);
     }
+
     function checkIsFunction(entity, node) {
         check(entity.kind === "Function", `${entity.name || node.sourceString} not a function`, node);
     }
@@ -582,6 +586,7 @@ export default function analyze(match) {
             const value = exp.analyze();
             return core.exscribeStatement(value);
         },
+        
         // Return statement: return expr?;
         ReturnStmt(_return, expr) {
             check(context.currentFunction, "Return can only appear inside a function", _return);

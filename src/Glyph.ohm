@@ -74,7 +74,6 @@ Glyph {
 
   Primary = id Arguments          --functionCall
           | numeral
-          | codepointlit      --codepoint
           | true                  --true
           | false                 --false
           | stringlit             --string
@@ -130,12 +129,9 @@ Glyph {
   module = letter idchar*
   idchar = letter | digit | "_"
 
-  decnumeral = (digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?)
-  hexnumeral =  | ("0x" hexDigit+)
-  numeral = hexnumeral | decnumeral
+  numeral = digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?
   stringlit = "\"" (~"\"" any)* "\""
   charlit = "'" (~"\'" any) "'"
-  codepointlit = "U+" hexDigit+
 
   relop = "<=" | "<" | "==" | "!=" | ">=" | ">"
 
