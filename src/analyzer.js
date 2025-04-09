@@ -505,12 +505,6 @@ export default function analyze(match) {
           
             return core.functionDeclaration(funcEntity);
         },
-          
-        type(_typeNode) {
-            const typeName = this.sourceString;
-            check(validTypeRegex.test(typeName), `Invalid type: ${typeName}`, this);
-            return typeName;
-        },
 
         // Parameter in a function declaration: name: Type (unwrap the id: type into just type)
         Parameter(id, typeOpt) {
@@ -748,6 +742,12 @@ export default function analyze(match) {
                 ...core.arrayExpression(elements, `${elemType}[]`),
                 value,
             };
+        },
+
+        type(_typeNode) {
+            const typeName = this.sourceString;
+            check(validTypeRegex.test(typeName), `Invalid type: ${typeName}`, this);
+            return typeName;
         },
 
         // Identifier
