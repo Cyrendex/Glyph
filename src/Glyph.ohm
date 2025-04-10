@@ -78,6 +78,8 @@ Glyph {
           | false                 --false
           | stringlit             --string
           | charlit               --char
+          | Primary_addr          --address
+          | Primary_deref         --dereference
           | Primary "[" Exp "]"   --subscript
           | id                    --id
           | "[" ListOf<Exp, ","> "]" --array
@@ -124,6 +126,9 @@ Glyph {
   bitsizes128 = bitsizes64 | "128"
 
   keyword = affix | evoke | conjure | invoke | main | while | if | else | break | let | const | true | false | type | return
+
+  Primary_addr = "&" Primary
+  Primary_deref = "*" Primary
 
   id = ~keyword letter idchar*
   module = letter idchar*

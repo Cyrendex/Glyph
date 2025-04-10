@@ -46,6 +46,14 @@ export default function generate(program) {
             return lit.value ? "true" : "false";
         },
 
+        AddressOf(node) {
+            return `(() => ({ value: ${targetName(node.expression)} }))()`;
+        },
+        
+        Dereference(node) {
+            return `${gen(node.expression)}.value`;
+        },
+
         FunctionEvoke(decl) {
             output.push(`function ${gen(decl.fun)}(${decl.fun.parameters.map(gen).join(", ")}) {`);
             decl.fun.body.forEach(gen);
@@ -120,6 +128,5 @@ export default function generate(program) {
     };
 
     gen(program);
-    console.log(output)
     return output.join("\n");
 }

@@ -3,7 +3,8 @@ import { standardLibrary } from "./std-lib.js";
 
 const DEFAULT_INT_TYPE = "int32";
 const DEFAULT_FLOAT_TYPE = "float64";
-const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)|bool|string|glyph|codepoint|void|any)(\[\])*$/
+const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)|bool|string|glyph|codepoint|void|any)(\[\]|\*)*$/;
+
 
 
 // Define bit sizes for each base type
@@ -158,8 +159,12 @@ export default function analyze(match) {
         return type === core.glyphType;
     }
 
-    function isVoid(type) {
-        return type === core.voidType;
+    function isPointerType(type) {
+        return typeof type === "string" && type.endsWith("*");
+    }
+    
+    function unwrapPointerType(type) {
+        return isPointerType(type) ? type.slice(0, -1) : type;
     }
 
     function hasReturn(node) {
@@ -541,6 +546,31 @@ export default function analyze(match) {
             checkArrayIndexing(array, arrayNode, index, indexNode);
             const elementType = array.type.replace(/\[\]$/, "");
             return core.subscript(array, index, elementType);
+        },
+
+        Type_refderef(op, typeNode) {
+            const base = typeNode.analyze();
+            const opStr = op.sourceString;
+        
+            if (opStr === "*") {
+                return `${base}*`; // Pointer to base
+            } else if (opStr === "&") {
+                return `${base}*`; // Address-of also creates a pointer
+            }
+        
+            throw new Error(`Unknown ref/deref operator: ${opStr}`);
+        },
+
+        Primary_addr(_amp, expr) {
+            const variable = expr.analyze();
+            check(variable.kind === "Variable", "Can only take address of variables", expr);
+            return core.addressOf(variable, `${variable.type}*`);
+        },
+        
+        Primary_deref(_star, expr) {
+            const operand = expr.analyze();
+            check(isPointerType(operand.type), "Can only dereference a pointer", expr);
+            return core.dereference(operand, unwrapPointerType(operand.type));
         },
 
         Type_hint(_colon, typeNode) {

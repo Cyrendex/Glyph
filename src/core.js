@@ -10,6 +10,26 @@ export function variable(name, type, initializer = null) {
   return { kind: "Variable", name, type , initializer }
 }
 
+export function pointerType(baseType) {
+  return `${baseType}*`;
+}
+
+export function addressOf(expression, type) {
+  return {
+    kind: "AddressOf",
+    expression,
+    type,
+  };
+}
+
+export function dereference(expression, type) {
+  return {
+    kind: "Dereference",
+    expression,
+    type,
+  };
+}
+
 export const uintType = "uint";
 export const ufloatType = "ufloat";
 export const udecimType = "udecim";
@@ -26,6 +46,8 @@ export const codepointType = "codepoint"
 export const voidType = "void"
 export const anyType = "any"
 export const glyphType = "glyph"
+
+
 
 export function mainStatement(executables) {
   return { kind: "MainStatement", executables }

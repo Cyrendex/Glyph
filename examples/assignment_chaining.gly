@@ -2,6 +2,6 @@ affix io@exscribe;
 
 main = { 
     let x: int32 = 0; 
-    let y: int32 = (x = 42); 
+    let y: int32 = (x); 
     exscribe y; 
 }

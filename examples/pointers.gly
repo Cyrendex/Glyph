@@ -1,0 +1,9 @@
+affix io@exscribe;
+
+main = {
+    let x: int32 = 10;
+    let p: *int32 = &x;
+    let p2: **int32 = &p;
+    let y: int32 = *p;
+    exscribe y;
+}
