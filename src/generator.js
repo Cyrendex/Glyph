@@ -42,6 +42,10 @@ export default function generate(program) {
             return JSON.stringify(lit.value);
         },
 
+        NullLiteral(_) {
+            return "null";
+        },
+
         BooleanLiteral(lit) {
             return lit.value ? "true" : "false";
         },

@@ -1,0 +1,17 @@
+affix io@exscribe;
+
+main = {
+    let x: int32 = 10;
+    let p: *int32 = &x;
+    let p2: **int32 = &p;
+    let y: int32 = *p;
+    /@ DOESN'T CURRENTLY WORK: let z: int32 = &(&p); @/
+
+
+    let a: int32 = 10;
+    let b: int32? = 11;
+    let c: int32? = null;
+    let d: (*int32)? = null;
+
+    exscribe "works";
+}

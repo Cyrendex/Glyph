@@ -3,7 +3,7 @@ import { standardLibrary } from "./std-lib.js";
 
 const DEFAULT_INT_TYPE = "int32";
 const DEFAULT_FLOAT_TYPE = "float64";
-const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)|bool|string|glyph|codepoint|void|any)(\[\]|\*)*$/;
+const validTypeRegex = /^(u?(int|float|decim|fixed|slash|slog)(8|16|32|64|128)|bool|string|glyph|codepoint|void|any)(\[\]|\*|\?)*$/;
 
 
 
@@ -65,6 +65,24 @@ for (const base of numericBases) {
     }
 }
 
+
+
+function isPointerType(type) {
+    return typeof type === "string" && type.endsWith("*");
+}
+
+function unwrapPointerType(type) {
+    return isPointerType(type) ? type.slice(0, -1) : type;
+}
+
+function isOptionalType(type) {
+    return typeof type === "string" && type.endsWith("?");
+}
+
+function unwrapOptionalType(type) {
+    return isOptionalType(type) ? type.slice(0, -1) : type;
+}
+
 function isArrayType(type) {
     return type.endsWith("[]");
 }
@@ -88,6 +106,12 @@ function canConvertArray(from, to, value) {
 function canConvert(from, to, value) {
     if (from === to || from === "any" || to === "any") return true;
     if (from === "glyph" && to === "string") return true;
+    
+    if (isOptionalType(to) && from === unwrapOptionalType(to)) return true;
+    
+    if (value === null) {
+        return isOptionalType(to) || to === core.anyType;
+    }
 
     if (isArrayType(from) && isArrayType(to)) {
         return canConvertArray(from, to, value);
@@ -157,14 +181,6 @@ export default function analyze(match) {
 
     function isGlyph(type) {
         return type === core.glyphType;
-    }
-
-    function isPointerType(type) {
-        return typeof type === "string" && type.endsWith("*");
-    }
-    
-    function unwrapPointerType(type) {
-        return isPointerType(type) ? type.slice(0, -1) : type;
     }
 
     function hasReturn(node) {
@@ -551,13 +567,13 @@ export default function analyze(match) {
         Type_refderef(op, typeNode) {
             const base = typeNode.analyze();
             const opStr = op.sourceString;
-        
+          
             if (opStr === "*") {
-                return `${base}*`; // Pointer to base
+              return `${base}*`; // Pointer to base
             } else if (opStr === "&") {
-                return `${base}*`; // Address-of also creates a pointer
+              return `${base}*`; // Address-of also creates a pointer
             }
-        
+          
             throw new Error(`Unknown ref/deref operator: ${opStr}`);
         },
 
@@ -571,6 +587,23 @@ export default function analyze(match) {
             const operand = expr.analyze();
             check(isPointerType(operand.type), "Can only dereference a pointer", expr);
             return core.dereference(operand, unwrapPointerType(operand.type));
+        },
+
+        Type_group(_open, inner, _close) {
+            return inner.analyze();
+        },
+
+        Type_option(innerType, _q) {
+            const typeStr = innerType.analyze();
+            return core.optionalType(typeStr);
+        },
+
+        Primary_null(_) {
+            return {
+              kind: "NullLiteral",
+              value: null,
+              type: null,
+            };
         },
 
         Type_hint(_colon, typeNode) {
@@ -691,13 +724,13 @@ export default function analyze(match) {
                 typeStr = typeNode.analyze();
                 check(validTypeRegex.test(typeStr), "Type expected", typeNode);
                 if (typeStr !== core.anyType) {
-                    check(
-                        canConvert(initial.type, typeStr, initial.value),
-                        `Cannot assign ${initial.type} to ${typeStr}`,
-                        id
-                    );
+                    if (initial.value === null) {
+                      check(isOptionalType(typeStr),`Cannot assign null to non-optional type ${typeStr}`,id);
+                      initial.type = typeStr; // assign correct type to `null`
+                    } else {
+                      check(canConvert(initial.type, typeStr, initial.value),`Cannot assign ${initial.type} to ${typeStr}`,id);
+                    }
                 }
-
             }
 
             const variable = core.variable(name, typeStr, initial);
@@ -714,13 +747,18 @@ export default function analyze(match) {
                 check(target.mutable, `Cannot assign to constant ${target.name}`, id);
             }
 
-            check(
-                canConvert(source.type, target.type, source.value) ||
-                source.type === core.anyType ||
-                target.type === core.anyType,
-                `Cannot assign ${source.type} to ${target.type}`,
-                id
-            );
+            if (source.value === null) {
+                check(isOptionalType(target.type),`Cannot assign null to non-optional type ${target.type}`,id);
+                source.type = target.type;
+            } else {
+                check(
+                    canConvert(source.type, target.type, source.value) ||
+                    source.type === core.anyType ||
+                    target.type === core.anyType,
+                    `Cannot assign ${source.type} to ${target.type}`,
+                    id
+                );
+            }
 
             return core.assignment(target, source);
         },

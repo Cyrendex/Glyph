@@ -14,20 +14,8 @@ export function pointerType(baseType) {
   return `${baseType}*`;
 }
 
-export function addressOf(expression, type) {
-  return {
-    kind: "AddressOf",
-    expression,
-    type,
-  };
-}
-
-export function dereference(expression, type) {
-  return {
-    kind: "Dereference",
-    expression,
-    type,
-  };
+export function optionalType(baseType) {
+  return `${baseType}?`;
 }
 
 export const uintType = "uint";
@@ -115,6 +103,22 @@ export function unary(op, operand, type) {
   return { kind: "UnaryExpression", op, operand, type}
 }
 
+export function addressOf(expression, type) {
+  return {
+    kind: "AddressOf",
+    expression,
+    type,
+  };
+}
+
+export function dereference(expression, type) {
+  return {
+    kind: "Dereference",
+    expression,
+    type,
+  };
+}
+
 export function subscript(array, index, type) {
   return {
     kind: "SubscriptExpression",
@@ -135,6 +139,7 @@ export function arrayExpression(elements, type) {
 export function functionCall(callee, args) {
   return { kind: "FunctionCall", callee, args, type: callee.type.returnTypes}
 }
+
 
 String.prototype.type = stringType
 Number.prototype.type = floatType
