@@ -23,7 +23,8 @@ export default function generate(program) {
         },
     
         VariableDeclaration(d) {
-            output.push(`let ${gen(d.variable)} = ${gen(d.initializer)};`);
+            const keyword = d.variable.mutable ? "let" : "const";
+            output.push(`${keyword} ${gen(d.variable)} = ${gen(d.initializer)};`);
         },
         
         Variable(v) {

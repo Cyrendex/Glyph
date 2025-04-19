@@ -11,9 +11,10 @@ main = {
 
     let a: int32 = 10;
     let b: int32? = 11;
-    let c: int32? = null;
+    b = null;
+    const c: int32? = null;
     let d: (*int32)? = null;
     let f: *(int32?) = &z;
 
-    exscribe "works";
+    exscribe x+y*a;
 }
