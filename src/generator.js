@@ -10,8 +10,8 @@ export default function generate(program) {
             }
         //If you want to use the mapping, uncomment the next line
         //mapping is used for letting words like 'switch' and stuff like that be variable names
-        // return `${entity.name}_${mapping.get(entity)}`;
-        return `${entity.name}`;
+        return `${entity.name}_${mapping.get(entity)}`;
+        // return `${entity.name}`;
         };
     })(new Map());
 
