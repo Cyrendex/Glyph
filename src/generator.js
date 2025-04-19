@@ -43,6 +43,10 @@ export default function generate(program) {
             return JSON.stringify(lit.value);
         },
 
+        CodePointLiteral(lit) {
+            return JSON.stringify(lit.value);
+        },
+
         NullLiteral(_) {
             return "null";
         },

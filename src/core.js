@@ -1,7 +1,7 @@
 export function program(statements) {
   return { kind: "Program", statements }
 }
-  
+
 export function variableDeclaration(variable, initializer) {
   return { kind: "VariableDeclaration", variable, initializer }
 }
@@ -34,8 +34,6 @@ export const codepointType = "codepoint"
 export const voidType = "void"
 export const anyType = "any"
 export const glyphType = "glyph"
-
-
 
 export function mainStatement(executables) {
   return { kind: "MainStatement", executables }
@@ -139,7 +137,6 @@ export function arrayExpression(elements, type) {
 export function functionCall(callee, args) {
   return { kind: "FunctionCall", callee, args, type: callee.type.returnTypes}
 }
-
 
 String.prototype.type = stringType
 Number.prototype.type = floatType

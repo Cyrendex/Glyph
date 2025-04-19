@@ -851,6 +851,15 @@ export default function analyze(match) {
             };
         },
 
+        codepointlit(_open, _prefix, codepointNode, _close) {
+            const value = String.fromCodePoint(parseInt(codepointNode.sourceString, 16));
+            return {
+                kind: "CodePointLiteral",
+                value,
+                type: core.codepointType,
+            };
+        },
+
         Primary_true(_) {
             return {
                 kind: "BooleanLiteral",

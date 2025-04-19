@@ -1,6 +1,6 @@
 Glyph {
   Program   = Stmt*
-  
+
   Stmt    = MainStmt
           | LambdaStmt
           | ImportStmt
@@ -57,7 +57,7 @@ Glyph {
 
   Exp = Condition relop Condition --relop
       | Condition
-  
+
   Condition = Condition "&&" Term --and
             | Condition "||" Term --or
             | Condition "+" Term --add
@@ -79,6 +79,7 @@ Glyph {
           | false                 --false
           | stringlit             --string
           | charlit               --char
+          | codepointlit          --codepoint
           | Primary_addr          --address
           | Primary_deref         --dereference
           | Primary "[" Exp "]"   --subscript
@@ -125,7 +126,7 @@ Glyph {
   codepoint = "codepoint"
   glyph = "glyph"
   void = "void"
-  
+
 
   bitsizes64 = ("8" | "16" | "32" | "64")
   bitsizes128 = bitsizes64 | "128"
@@ -134,7 +135,7 @@ Glyph {
 
   Primary_addr = "&" Primary
   Primary_deref = "*" Primary
-  
+
   id = ~keyword letter idchar*
   module = letter idchar*
   idchar = letter | digit | "_"
@@ -142,7 +143,9 @@ Glyph {
   numeral = digit+ ("." digit+)? (("E"|"e") ("+"|"-")? digit+)?
   stringlit = "\"" (~"\"" any)* "\""
   charlit = "'" (~"\'" any) "'"
-
+  codepointlit = "'" "U+" hexDigits "'"
+  hexDigits = hexDigit hexDigit hexDigit hexDigit hexDigit? hexDigit?
+        
   relop = "<=" | "<" | "==" | "!=" | ">=" | ">"
 
   space += "/@" (~"@/" any)* "@/" --comment

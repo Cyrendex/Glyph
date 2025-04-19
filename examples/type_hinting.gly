@@ -21,7 +21,6 @@ evoke our_func3() -> int32 {
   return 1
 }
 
-
 main = {
   const var1: uint8 = 2;
   const var2: ufloat32 = 3.14;
@@ -36,6 +35,7 @@ main = {
   const var11: bool = true;
   const var12: string = "Hello World";
   const var14: glyph = 'a';
+  const var: codepoint = 'U+0001';
 
   const var15: [[int32]] = [[8],[7]];
   const var16: [[ufloat16]] = [[1.1], [2.2]];
