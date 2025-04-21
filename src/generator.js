@@ -8,7 +8,7 @@ export default function generate(program) {
             if (!mapping.has(entity)) {
                 mapping.set(entity, mapping.size + 1);
             }
-        //If you want to use the mapping, uncomment the next line
+        //If you want to use the mapping, uncomment the first line
         //mapping is used for letting words like 'switch' and stuff like that be variable names
         return `${entity.name}_${mapping.get(entity)}`;
         // return `${entity.name}`;

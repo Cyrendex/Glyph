@@ -829,7 +829,7 @@ export default function analyze(match) {
         // Literals
         numeral(_digits, _dot, _frac, _e, _expSign, _exp) {
             const text = this.sourceString;
-            return text.includes(".") || text.includes("e") || text.includes("E")
+            return (text.includes(".") || text.includes("e") || text.includes("E"))
                 ? { kind: "NumericLiteral", value: Number(text), type: DEFAULT_FLOAT_TYPE }
                 : { kind: "NumericLiteral", value: BigInt(text), type: DEFAULT_INT_TYPE };
         },
@@ -837,16 +837,15 @@ export default function analyze(match) {
         stringlit(_open, _chars, _close) {
             return {
                 kind: "StringLiteral",
-                value: this.sourceString,
+                value: _chars.sourceString,
                 type: core.stringType
             };
         },
 
         charlit(_open, charNode, _close) {
-            const value = charNode.sourceString;
             return {
                 kind: "GlyphLiteral",
-                value,
+                value: charNode.sourceString,
                 type: core.glyphType,
             };
         },
