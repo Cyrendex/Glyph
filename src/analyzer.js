@@ -453,25 +453,21 @@ export default function analyze(match) {
             return core.binary(o, l, r, core.booleanType);
         },
 
-        Primary_functionCall(id, callOrExp) {
+        Primary_functionCall(id, argsNode) {
             const calleeName = id.sourceString;
-            const callee = context.lookup(calleeName);
-
-            checkDeclared(callee, calleeName, id);
-            checkIsFunction(callee, id);
-
-            let args = [];
-
-            if (callOrExp.numChildren > 0) {
-                if (callOrExp.ctorName === "Arguments") {
-                    args = callOrExp.child(1).asIteration().children.map(arg => arg.analyze());
-                } else {
-                    args = [callOrExp.analyze()];
-                }
-            }
+            const symbol = context.lookup(calleeName);
+            checkDeclared(symbol, calleeName, id);
+          
+            const callee = symbol.kind === "Variable" ? symbol.initializer : symbol;
+          
+            check(callee?.type?.kind === "FunctionType",`${callee.name ?? calleeName} is not a function`,id);
+          
+            const args = argsNode.analyze();
             checkArgumentCountAndTypes(callee.parameters, args, id);
+          
             return core.functionCall(callee, args);
         },
+          
 
 
         Arguments(_open, argsList, _close) {
@@ -648,6 +644,7 @@ export default function analyze(match) {
             const exscribeFunc = context.lookup("exscribe");
             checkDeclared(exscribeFunc, "exscribe", _exscribe);
             const value = exp.analyze();
+            check(value.type !== core.voidType,"Cannot exscribe a void value",exp);
             return core.exscribeStatement(value);
         },
         
@@ -692,7 +689,6 @@ export default function analyze(match) {
             return core.returnStatement(returnValue);
         },
 
-
         // Variable declaration with type: (let/const) name: Type = expr;
         LetStmt(_let, decl) {
             const node = decl.analyze();
@@ -713,9 +709,10 @@ export default function analyze(match) {
         VarDec(id, maybeType, _eq, expr, _semi) {
             const name = id.sourceString;
             checkNotAlreadyDeclared(name, id);
+        
             const initial = expr.analyze();
-
             let typeStr;
+        
             if (maybeType.children.length === 0) {
                 typeStr = initial.type;
             } else {
@@ -725,23 +722,26 @@ export default function analyze(match) {
                 check(validTypeRegex.test(typeStr), "Type expected", typeNode);
                 if (typeStr !== core.anyType) {
                     if (initial.value === null) {
-                      check(isOptionalType(typeStr),`Cannot assign null to non-optional type ${typeStr}`,id);
-                      initial.type = typeStr; // assign correct type to `null`
+                        check(isOptionalType(typeStr), `Cannot assign null to non-optional type ${typeStr}`, id);
+                        initial.type = typeStr;
                     } else {
-                      check(canConvert(initial.type, typeStr, initial.value),`Cannot assign ${initial.type} to ${typeStr}`,id);
+                        check(canConvert(initial.type, typeStr, initial.value), `Cannot assign ${initial.type} to ${typeStr}`, id);
                     }
                 }
             }
-
+        
+            check(typeStr !== core.voidType, "Cannot assign a variable to void type", expr);
             const variable = core.variable(name, typeStr, initial);
             context.add(name, variable);
             return core.variableDeclaration(variable, initial);
         },
         
+        
         // Assignment: target = source;
         AssignmentStmt(id, _eq, expr, _semi) {
             const source = expr.analyze();
             const target = id.analyze();
+            check(source.type !== core.voidType, "Cannot assign a void value", expr);
             check(target && target.kind === "Variable", `${id.sourceString} not declared`, id);
             if (target.mutable !== undefined) {
                 check(target.mutable, `Cannot assign to constant ${target.name}`, id);
@@ -780,6 +780,43 @@ export default function analyze(match) {
             const body = bodyBlock.analyze();
             context = context.parent;
             return core.whileStatement(condition, body);
+        },
+
+        ConjureStmt(_conjure, block) {
+            return core.conjureStatement(block.analyze());
+        },
+
+        Primary_lambda(id, _colon, _open, paramList, _close, _arrow, returnTypeNode, _eq, conjureStmt) {
+            const returnType = returnTypeNode.analyze();
+          
+            const func = core.fun(id.sourceString, [], null, returnType);
+            func.type = core.functionType([], returnType);
+          
+            context = context.newChildContext({ currentFunction: func });
+          
+            const params = paramList.numChildren > 0
+              ? paramList.child(0).asIteration().children.map(p => p.analyze())
+              : [];
+          
+            func.parameters = params;
+            func.type.paramTypes = params.map(p => p.type);
+            func.body = conjureStmt.analyze().block;
+          
+            context = context.parent;
+            return func;
+        },
+
+        Primary_call(funcExpr, argsNode) {
+            const callee = funcExpr.analyze();
+            check(
+              callee && callee.type && callee.type.kind === "FunctionType",
+              `${callee.name ?? "Value"} is not a function`,
+              funcExpr
+            );
+          
+            const args = argsNode.analyze();
+            checkArgumentCountAndTypes(callee.parameters, args, funcExpr);
+            return core.functionCall(callee, args);
         },
 
         // Break statement: break;

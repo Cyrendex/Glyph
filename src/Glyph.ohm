@@ -13,9 +13,9 @@ Glyph {
           | ReturnStmt
           | ExscribeStmt
           | Exp endchar                       --exprstmt
-          | break endchar                    --break
+          | break endchar                     --break
           | AssignmentStmt
-          | ("++" | "--") Primary_id endchar   --bump
+          | ("++" | "--") Primary_id endchar  --bump
           | space+
 
   VarDec = id Type_hint? "=" Exp endchar
@@ -74,6 +74,7 @@ Glyph {
          | Primary
 
   Primary = id Arguments          --functionCall
+          | Primary Arguments     --call
           | numeral
           | true                  --true
           | false                 --false
@@ -83,6 +84,7 @@ Glyph {
           | Primary_addr          --address
           | Primary_deref         --dereference
           | Primary "[" Exp "]"   --subscript
+          | Primary_lambda        
           | null                  --null 
           | id                    --id
           | "[" ListOf<Exp, ","> "]" --array
@@ -135,6 +137,9 @@ Glyph {
 
   Primary_addr = "&" Primary
   Primary_deref = "*" Primary
+
+  Primary_lambda = id ":" "(" ParameterListOpt ")" "->" Type "=" ConjureStmt
+
 
   id = ~keyword letter idchar*
   module = letter idchar*

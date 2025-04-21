@@ -21,7 +21,7 @@ export default function generate(program) {
         Program(p) {
             p.statements.forEach(gen);
         },
-    
+
         VariableDeclaration(d) {
             const keyword = d.variable.mutable ? "let" : "const";
             output.push(`${keyword} ${gen(d.variable)} = ${gen(d.initializer)};`);
@@ -69,6 +69,7 @@ export default function generate(program) {
             output.push("}");
         },
 
+        //Change to account for lambda functions
         Function(f) {
             return targetName(f);
         },
@@ -121,6 +122,17 @@ export default function generate(program) {
 
         BreakStatement() {
             output.push("break;");
+        },
+
+        ConjureStatement(node) {
+            const lines = [];
+            lines.push("(() => {");
+            node.block.forEach(stmt => {
+              const line = gen(stmt);
+              if (line) lines.push(line);
+            });
+            lines.push("})()");
+            return lines.join("\n");
         },
 
         SubscriptExpression(e) {

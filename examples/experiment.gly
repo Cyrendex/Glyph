@@ -1,0 +1,7 @@
+affix io@exscribe;
+main = {
+    let f = double: (x: int32) -> int32 = conjure {
+        return x * 2
+    };
+    exscribe(f(3));
+}
