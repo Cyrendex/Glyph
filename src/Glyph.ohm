@@ -12,6 +12,7 @@ Glyph {
           | InvokeStmt
           | ReturnStmt
           | ExscribeStmt
+          | TypeStmt
           | Exp endchar                       --exprstmt
           | break endchar                     --break
           | AssignmentStmt
@@ -25,6 +26,7 @@ Glyph {
           | ("&" | "*") Type      --refderef
           | "[" Type "]"          --array
           | "(" Type ")"          --group
+          | "conjure" "[" Type "]"  -- conjure
           | type
 
   ExscribeStmt = exscribe Exp endchar
@@ -39,12 +41,14 @@ Glyph {
 
   Arguments = "(" ListOf<Exp, ","> ")"
   InvokeStmt = invoke ~(exscribe) id Arguments endchar --invoke
+  
+  TypeStmt = typeof Exp endchar
 
   ConjureStmt = conjure Block
   LetStmt = let VarDec
   ConstStmt = const VarDec
   AssignmentStmt = Primary_id "=" Exp ";"?
-  LambdaStmt = id ":" "(" ParameterListOpt ")" "->" Type "=" ConjureStmt endchar
+  LambdaStmt = id ":" "(" ParameterListOpt ")" "->" Type "=" ConjureStmt
 
   ReturnStmt = return Exp
   IfStmt = if Exp Block (else (Block | IfStmt))?
@@ -94,6 +98,7 @@ Glyph {
   let = "let" ~idchar
   const = "const" ~idchar
   exscribe = "exscribe" ~idchar
+  typeof = "typeof" ~idchar
   evoke = "evoke" ~idchar
   conjure = "conjure" ~idchar
   invoke = "invoke" ~idchar
@@ -139,7 +144,6 @@ Glyph {
   Primary_deref = "*" Primary
 
   Primary_lambda = id ":" "(" ParameterListOpt ")" "->" Type "=" ConjureStmt
-
 
   id = ~keyword letter idchar*
   module = letter idchar*

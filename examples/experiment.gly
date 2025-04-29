@@ -1,7 +1,16 @@
 affix io@exscribe;
+affix typing@typeof;
+
+evoke our_func1(x:int32) -> int32 {
+  return x+1
+}
+
 main = {
-    let f = double: (x: int32) -> int32 = conjure {
+    let y = our_func1(3);
+
+    let f: conjure[int32] = double: (x: int32) -> int32 = conjure {
         return x * 2
     };
+    
     exscribe(f(3));
 }

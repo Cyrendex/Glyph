@@ -1,7 +1,7 @@
 import { voidType } from "./core.js";
 
 export default function generate(program) {
-    const output = [];
+    const state = { output: [] };
 
     const targetName = (mapping => {
         return entity => {
@@ -15,7 +15,7 @@ export default function generate(program) {
         };
     })(new Map());
 
-    const gen = node => generators?.[node?.kind]?.(node) ?? node;
+    const gen = node => generators?.[node?.kind]?.(node) ?? node;    
 
     const generators = {
         Program(p) {
@@ -24,7 +24,13 @@ export default function generate(program) {
 
         VariableDeclaration(d) {
             const keyword = d.variable.mutable ? "let" : "const";
-            output.push(`${keyword} ${gen(d.variable)} = ${gen(d.initializer)};`);
+            if (d.initializer.kind === "FunctionEvoke") {
+                state.output.push(`${keyword} ${gen(d.variable)} = ;`);
+                gen(d.initializer.fun)
+                return;
+            }
+            
+            state.output.push(`${keyword} ${gen(d.variable)} = ${gen(d.initializer)};`)
         },
         
         Variable(v) {
@@ -64,12 +70,13 @@ export default function generate(program) {
         },
 
         FunctionEvoke(decl) {
-            output.push(`function ${gen(decl.fun)}(${decl.fun.parameters.map(gen).join(", ")}) {`);
-            decl.fun.body.forEach(gen);
-            output.push("}");
+            state.output.push(`function ${gen(decl.fun)}(${decl.fun.parameters.map(gen).join(", ")}) {`);
+            for (let i = 0; i < decl.fun.body.length; i++) {
+                gen(decl.fun.body[i]);
+            }
+            state.output.push("}");
         },
 
-        //Change to account for lambda functions
         Function(f) {
             return targetName(f);
         },
@@ -77,22 +84,23 @@ export default function generate(program) {
         FunctionCall(c) {
             const call = `${gen(c.callee)}(${c.args.map(gen).join(", ")})`;
             if (c.type === voidType) {
-                output.push(`${call};`);
+                state.output.push(`${call};`);
                 return;
             }
             return call;
         },
 
         ReturnStatement(r) {
-            output.push(`return ${gen(r.expression)};`);
+            state.output.push(`return ${gen(r.expression)};`);
         },
 
         Assignment(a) {
-            output.push(`${gen(a.target)} = ${gen(a.source)};`);
+            state.output.push(`${gen(a.target)} = ${gen(a.source)};`);
         },
 
         ExscribeStatement(e) {
-            output.push(`console.log(${gen(e.expression)});`);
+            console.log(e.expression)
+            state.output.push(`console.log(${gen(e.expression)});`);
         },
 
         BinaryExpression(e) {
@@ -105,23 +113,29 @@ export default function generate(program) {
         },
 
         IfStatement(s) {
-            output.push(`if (${gen(s.condition)}) {`);
-            s.consequent.forEach(gen);
-            if (s.alternative.length > 0) {
-                output.push("} else {");
-                s.alternative.forEach(gen);
+            state.output.push(`if (${gen(s.condition)}) {`);
+            for (let i = 0; i < s.consequent.length; i++) {
+                gen(s.consequent[i]);
             }
-            output.push("}");
+
+            if (s.alternative.length > 0) {
+                state.output.push("} else {");
+                let alternative = s.alternative.flat();
+                for (let i = 0; i < alternative.length; i++) {
+                    gen(alternative[i]);
+                }
+            }
+            state.output.push("}");
         },
 
         WhileStatement(s) {
-            output.push(`while (${gen(s.condition)}) {`);
+            state.output.push(`while (${gen(s.condition)}) {`);
             s.block.forEach(gen);
-            output.push("}");
+            state.output.push("}");
         },
 
         BreakStatement() {
-            output.push("break;");
+            state.output.push("break;");
         },
 
         ConjureStatement(node) {
@@ -143,11 +157,15 @@ export default function generate(program) {
             return `[${e.elements.map(gen).join(",")}]`;
         },
 
+        TypeStatement(node) {
+            return `typeof(${gen(node.expression)})`;
+        },
+
         MainStatement(m) {
             m.executables.forEach(gen);
         },
     };
 
     gen(program);
-    return output.join("\n");
+    return state.output.join("\n");
 }

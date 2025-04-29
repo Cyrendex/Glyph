@@ -280,8 +280,6 @@ export default function analyze(match) {
         check(entity.kind === "Function", `${entity.name || node.sourceString} not a function`, node);
     }
 
-
-
     function checkArgumentCountAndTypes(parameters, args, node) {
         check(parameters.length === args.length,
             `Expected ${parameters.length} argument(s) but ${args.length} passed`,
@@ -461,14 +459,43 @@ export default function analyze(match) {
             const callee = symbol.kind === "Variable" ? symbol.initializer : symbol;
           
             check(callee?.type?.kind === "FunctionType",`${callee.name ?? calleeName} is not a function`,id);
-          
+
             const args = argsNode.analyze();
-            checkArgumentCountAndTypes(callee.parameters, args, id);
-          
+            
+
+            if (callee.kind === "Function") {
+                checkArgumentCountAndTypes(callee.parameters, args, id);
+            } else if (callee.kind === "ImportedFunction") {
+                let parameters = standardLibrary["properties"]["functionList"][callee.module][callee.name];
+                check(args.length === parameters['expectedParameters'], `'${callee.name}' expects ${parameters['expectedParameters']} arguments`, id);
+                if(parameters['expectedParameters'] === 1) {
+
+                    if(parameters["expectedFields"] === null) {
+                        return parameters["coreFunction"]();
+                    } else {
+                        let collected = [args[0]];
+                        for (const [key, val] of Object.entries(args[0])) {
+                            if (parameters["expectedFields"].includes(key)) {
+                              collected.push(val);
+                            }
+                        }
+
+                        if(parameters["additionalBehaviors"] !== null && Object.keys(parameters["additionalBehaviors"]).includes(args[0].kind)) {
+                            const behavior = parameters["additionalBehaviors"][args[0].kind];
+                            collected[behavior[1]] = collected[behavior[1]][behavior[0]];
+                        }
+
+                        check(collected.length===parameters["expectedFields"].length+1, `Expected '${parameters['expectedFields'].length+1}' arguments, got '${collected.length}'`, id);
+                        return parameters["coreFunction"](...collected);
+                    }
+                }
+
+                //Need additional checks for Imported Functions with more than 1 expected parameter (ex: swap(1, 2))
+            }
+
+
             return core.functionCall(callee, args);
         },
-          
-
 
         Arguments(_open, argsList, _close) {
             return argsList.asIteration().children.map(arg => arg.analyze());
@@ -493,7 +520,7 @@ export default function analyze(match) {
             checkNotAlreadyDeclared(name, id);
           
             const returnTypeStr = returnType.sourceString;
-          
+            
             const placeholderParams = [];
             const placeholderType = core.functionType(placeholderParams, returnTypeStr);
             const funcEntity = core.fun(name, placeholderParams, null, returnTypeStr);
@@ -503,23 +530,49 @@ export default function analyze(match) {
           
             context = context.newChildContext({ currentFunction: funcEntity });
           
-            let params = [];
-            if (paramList.numChildren > 0) {
-              params = paramList.child(0).asIteration().children.map(param => param.analyze());
-            }
+            const params = paramList.numChildren > 0
+              ? paramList.child(0).asIteration().children.map(p => p.analyze())
+              : [];
           
             funcEntity.parameters = params;
             funcEntity.type.paramTypes = params.map(p => p.type);
-          
+            
             const body = block.analyze();
             context = context.parent;
           
             funcEntity.body = body;
-          
             if (returnTypeStr !== core.voidType) {
                 check(hasReturn(body), `Missing return in function '${name}' that returns ${returnTypeStr}`, id);
             }
           
+            return core.functionDeclaration(funcEntity);
+        },
+
+        Primary_lambda(id, _colon, _open, paramList, _close, _arrow, returnTypeNode, _eq, conjureStmt) {
+            const returnType = returnTypeNode.analyze();
+            const name = id.sourceString;
+            checkNotAlreadyDeclared(name, id);
+            const placeholderParams = [];
+            const placeholderType = core.functionType(placeholderParams, returnType);
+            const funcEntity = core.fun(name, placeholderParams, null, returnType);
+            funcEntity.type = placeholderType;
+            context.add(name, funcEntity);
+            context = context.newChildContext({ currentFunction: funcEntity });
+            const params = paramList.numChildren > 0
+                ? paramList.child(0).asIteration().children.map(p => p.analyze())
+                : [];
+            funcEntity.parameters = params;
+            funcEntity.type.paramTypes = params.map(p => p.type);
+            const conjureNode = conjureStmt.analyze();
+            const body = conjureNode.block;
+            context = context.parent;
+            
+            funcEntity.body = body;
+            
+            if (returnType !== core.voidType) {
+                check(hasReturn(body), `Missing return in function '${name}' that returns ${returnType}`, id);
+            }
+            
             return core.functionDeclaration(funcEntity);
         },
 
@@ -606,6 +659,11 @@ export default function analyze(match) {
             return typeNode.analyze();
         },
 
+        Type_conjure(_conjure, _open, returnTypeNode, _close) {
+            const returnType = returnTypeNode.analyze();
+            return core.functionType([], returnType);
+        },
+
         numericType(typeNode) {
             const literal = typeNode.sourceString;
             check(validTypeRegex.test(literal), `Invalid numeric type: ${literal}`, typeNode);
@@ -646,6 +704,13 @@ export default function analyze(match) {
             const value = exp.analyze();
             check(value.type !== core.voidType,"Cannot exscribe a void value",exp);
             return core.exscribeStatement(value);
+        },
+
+        TypeStmt(_type, exp, _semi) {
+            const typeFunc = context.lookup("typeof");
+            checkDeclared(typeFunc, "typeof", _type);
+            const value = exp.analyze();
+            return core.typeStatement(value);
         },
         
         // Return statement: return expr?;
@@ -719,10 +784,28 @@ export default function analyze(match) {
                 const typeHintNode = maybeType.child(0);
                 const typeNode = typeHintNode.child(1);
                 typeStr = typeNode.analyze();
-                check(validTypeRegex.test(typeStr), "Type expected", typeNode);
+              
+                if (typeStr.kind === "FunctionType" && initial.kind === "Function") {
+                    const funcType = typeStr;
+                    const func = initial;
+              
+                    funcType.paramTypes = func.parameters.map(p => p.type);
+                    func.type = funcType;
+                    func.returnHint = funcType.returnTypes;
+                }
+              
+                if (Array.isArray(typeStr)) {
+                    typeStr = typeStr[0];
+                }
+              
+                check(validTypeRegex.test(typeStr) || typeStr.kind === "FunctionType", "Type expected", typeNode);
+                
                 if (typeStr !== core.anyType) {
                     if (initial.value === null) {
                         check(isOptionalType(typeStr), `Cannot assign null to non-optional type ${typeStr}`, id);
+                        initial.type = typeStr;
+                    } else if (typeStr.kind === "FunctionType") {
+                        check(initial.fun.type.kind === "FunctionType", `Expected a function`, expr);
                         initial.type = typeStr;
                     } else {
                         check(canConvert(initial.type, typeStr, initial.value), `Cannot assign ${initial.type} to ${typeStr}`, id);
@@ -786,25 +869,7 @@ export default function analyze(match) {
             return core.conjureStatement(block.analyze());
         },
 
-        Primary_lambda(id, _colon, _open, paramList, _close, _arrow, returnTypeNode, _eq, conjureStmt) {
-            const returnType = returnTypeNode.analyze();
-          
-            const func = core.fun(id.sourceString, [], null, returnType);
-            func.type = core.functionType([], returnType);
-          
-            context = context.newChildContext({ currentFunction: func });
-          
-            const params = paramList.numChildren > 0
-              ? paramList.child(0).asIteration().children.map(p => p.analyze())
-              : [];
-          
-            func.parameters = params;
-            func.type.paramTypes = params.map(p => p.type);
-            func.body = conjureStmt.analyze().block;
-          
-            context = context.parent;
-            return func;
-        },
+
 
         Primary_call(funcExpr, argsNode) {
             const callee = funcExpr.analyze();

@@ -51,6 +51,10 @@ export function importStatement(module, imports) {
   return { kind: "ImportStatement", module, imports }
 }
 
+export function typeStatement(expression, value) {
+  return { kind: "TypeStatement", expression, value }
+}
+
 export function whileStatement(condition, block) {
   return { kind: "WhileStatement", condition, block }
 }
@@ -68,11 +72,11 @@ export function fun(name, parameters, body, returnHint) {
 }
 
 export function importedFunction(module, name, type) {
-  return { kind: "Function", module, name, type, imported: true }
+  return { kind: "ImportedFunction", module, name, type, imported: true }
 }
 
 export function functionType(paramTypes, returnTypes) {
-  return { kind: "FunctionType", paramTypes, returnTypes}
+  return { kind: "FunctionType", type: `conjure[${returnTypes}]`, paramTypes, returnTypes}
 }
 
 export function returnStatement(expression) {

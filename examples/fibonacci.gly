@@ -6,4 +6,4 @@ evoke fib(n: int32) -> int32 {
   }
 }
 
-main = fib(6)
+main = { fib(6); }
