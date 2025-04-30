@@ -455,7 +455,7 @@ export default function analyze(match) {
             const calleeName = id.sourceString;
             const symbol = context.lookup(calleeName);
             checkDeclared(symbol, calleeName, id);
-          
+            
             const callee = symbol.kind === "Variable" ? symbol.initializer : symbol;
           
             check(callee?.type?.kind === "FunctionType",`${callee.name ?? calleeName} is not a function`,id);
@@ -492,8 +492,11 @@ export default function analyze(match) {
 
                 //Need additional checks for Imported Functions with more than 1 expected parameter (ex: swap(1, 2))
             }
-
-
+            
+            if (callee.kind === "FunctionEvoke") {
+                return core.functionCall(callee.fun, args);
+            }
+            
             return core.functionCall(callee, args);
         },
 

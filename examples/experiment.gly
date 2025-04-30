@@ -1,8 +1,12 @@
-
+affix io@exscribe;
+evoke here() -> string {
+    return "Hello, world!"
+}
 main = {
-
     let f: conjure[int32] = double: (x: int32) -> int32 = conjure {
         return x * 2
     };
-    
+    /@ exscribe(f); @/
+    exscribe(f(5));
+    exscribe(here());
 }
