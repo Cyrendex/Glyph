@@ -23,10 +23,12 @@ export default function generate(program) {
         },
 
         VariableDeclaration(d) {
+            console.log(d)
+
             const keyword = d.variable.mutable ? "let" : "const";
             if (d.initializer.kind === "FunctionEvoke") {
                 state.output.push(`${keyword} ${gen(d.variable)} = ;`);
-                gen(d.initializer.fun)
+                gen(d.initializer)
                 return;
             }
             
@@ -99,7 +101,6 @@ export default function generate(program) {
         },
 
         ExscribeStatement(e) {
-            console.log(e.expression)
             state.output.push(`console.log(${gen(e.expression)});`);
         },
 
