@@ -2,6 +2,21 @@ import * as core from "./core.js";
 
 export const standardLibrary = {
   properties: {
+    /*
+    structure:
+    {
+      "moduleName":
+        {
+          "functionName":
+          {
+            "expectedParameters":number, //number of parameters expected by the function.
+            "coreFunction":core.functionType, //function from core.js.
+            "expectedFields":[string], //fields that are expected beyond the default node. Empty list if no additional fields. Null if node not included. 
+            "additionalBehaviors":null|{"FunctionCall":[string,number]}, //additional behaviors that are expected. Null if no additional behaviors. List is of the form [string,number] where string is the name of the function and number is the index of the parameter that is expected to be a function call.
+          }
+        }
+    }
+    */
     functionList: {
       "io":
         {

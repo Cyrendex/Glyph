@@ -18,7 +18,6 @@ export default function generate(program) {
     const gen = (node, arg) => generators?.[node?.kind]?.(node, arg) ?? node;
     
     const generators = {
-        
         Program(p) {
             p.statements.forEach(gen);
         },
@@ -123,7 +122,7 @@ export default function generate(program) {
         UnaryExpression(e) {
             return `(${e.op}${gen(e.operand)})`;
         },
-        
+
         IfStatement(s) {
             state.output.push(`if (${gen(s.condition)}) {`);
             for (let i = 0; i < s.consequent.length; i++) {
@@ -140,36 +139,43 @@ export default function generate(program) {
         },
 
         WhileStatement(s) {
-        state.output.push(`while (${gen(s.condition)}) {`);
-        s.block.forEach(gen);
-        state.output.push("}");
+            state.output.push(`while (${gen(s.condition)}) {`);
+            s.block.forEach(gen);
+            state.output.push("}");
         },
+
         BreakStatement() {
-        state.output.push("break;");
+            state.output.push("break;");
         },
+
         ConjureStatement(node) {
-        const lines = [];
-        lines.push("(() => {");
-        node.block.forEach((stmt) => {
-        const line = gen(stmt);
-        if (line) lines.push(line);
-        });
-        lines.push("})()");
-        return lines.join("\n");
+            const lines = [];
+            lines.push("(() => {");
+            node.block.forEach((stmt) => {
+                const line = gen(stmt);
+                if (line) lines.push(line);
+            });
+            lines.push("})()");
+            return lines.join("\n");
         },
+
         SubscriptExpression(e) {
-        return `${gen(e.array)}[${gen(e.index)}]`;
+            return `${gen(e.array)}[${gen(e.index)}]`;
         },
+
         ArrayExpression(e) {
-        return `[${e.elements.map(gen).join(",")}]`;
+            return `[${e.elements.map(gen).join(",")}]`;
         },
+
         TypeStatement(node) {
-        return `typeof(${gen(node.expression)})`;
+            return `typeof(${gen(node.expression)})`;
         },
+
         MainStatement(m) {
-        m.executables.forEach(gen);
+            m.executables.forEach(gen);
         },
     };
+
     gen(program);
     return state.output.join("\n");
 }

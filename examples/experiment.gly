@@ -1,8 +1,10 @@
 affix io@exscribe;
+affix typing@typeof;
 
 main = {
     let f: conjure[int32] = double: (x: int32) -> int32 = conjure {
         return x * 2
     };
     exscribe(double(5));
+    exscribe(typeof(f));
 }

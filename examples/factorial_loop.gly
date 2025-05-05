@@ -4,6 +4,9 @@ main = {
   let n: int32 = 5;
   let fact: int32 = 1;
   while n > 1 {
+    if fact==0 {
+      break;
+    }
     fact = fact * n;
     n = n - 1;
   }
