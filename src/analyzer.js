@@ -496,7 +496,7 @@ export default function analyze(match) {
             if (callee.kind === "FunctionEvoke") {
                 return core.functionCall(callee.fun, args);
             }
-            
+
             return core.functionCall(callee, args);
         },
 
@@ -651,11 +651,7 @@ export default function analyze(match) {
         },
 
         Primary_null(_) {
-            return {
-              kind: "NullLiteral",
-              value: null,
-              type: null,
-            };
+            return core.NullLiteral();
         },
 
         Type_hint(_colon, typeNode) {

@@ -142,6 +142,10 @@ export function functionCall(callee, args) {
   return { kind: "FunctionCall", callee, args, type: callee.type.returnTypes}
 }
 
+export function NullLiteral() {
+  return { kind: "NullLiteral", value: null, type: null };
+}
+
 String.prototype.type = stringType
 Number.prototype.type = floatType
 BigInt.prototype.type = intType

@@ -16,6 +16,16 @@ Glyph is a language that enables backend developers to approach programming with
 - Limited core functionality, importable functionality for additional support
 - Built-in support for generic typing
 
+## Static Errors
+- Type Errors: Glyph enforces type correctness across assignments, operations, function arguments, and return values. Mismatched types are not allowed and will result in a compile-time error.
+- Declaration Errors: Variables and functions must be declared before use. Referencing undeclared identifiers is a static error. Redeclaration of identifiers in the same scope is also disallowed.
+- Function Call Errors: Function calls must match the declared number and types of parameters. Providing too many, too few, or incorrectly typed arguments will produce a static error.
+- Function Context Errors: Return statements must appear inside function bodies. Using return statements outside of a function context is invalid.
+- Method Call Errors: Calling a method or property on a value that does not support it will result in an error. This includes accessing non-existent fields or methods.
+- Return Type Errors: All functions must return a value matching their declared return type. Returning the wrong type or failing to return a value in a non-void function is a static error.
+- Member Access Errors: Only valid fields on arrays may be accessed. Invalid member accesses are disallowed at compile time.
+- Mutability Errors: Immutable (const) variables cannot be reassigned. Attempting to mutate a constant will trigger a static error.
+- Control Flow Errors: Constructs like break must appear within appropriate loop contexts. Use outside of loops is rejected statically.
 
 ## Example Programs
 
