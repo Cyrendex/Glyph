@@ -113,7 +113,7 @@ Glyph {
   null = "null" ~idchar
 
 
-  type = (numericType | bool | string | codepoint | glyph | void) ~idchar
+  type = (numericType | bool | string | codepoint | glyph | void | anyType) ~idchar
   numericType = unsignedNumericType | signedNumericType
 
   unsignedNumericType = "uint" bitsizes128
@@ -133,6 +133,7 @@ Glyph {
   codepoint = "codepoint"
   glyph = "glyph"
   void = "void"
+  anyType = "any"
 
 
   bitsizes64 = ("8" | "16" | "32" | "64")

@@ -19,6 +19,14 @@ const semanticChecks = [
         }"
     ],
 
+    [
+  "Assign null to optional type",
+  "\
+  main = {\
+    let maybe: int32? = null;\
+  }"
+],
+
     ["Function invocation with no return", 
         "\
         affix io@exscribe; \
@@ -87,6 +95,23 @@ const semanticChecks = [
         } \
         main = { \
             invoke log(); \
+        }"
+    ],
+
+    ["Typing and Conjure Statements",
+        "\
+        affix io@exscribe;\
+        affix typing@typeof;\
+        \
+        main = {\
+            let f: conjure[int32] = double: (x: int32) -> int32 = conjure {\
+                return x * 2\
+            };\
+            \
+        \
+            exscribe(double(5));\
+            exscribe(typeof(f));\
+            exscribe(typeof(f(5)));\
         }"
     ],
 
@@ -275,6 +300,108 @@ const semanticChecks = [
         affix io@exscribe; \
         evoke greet() -> void { }"
     ],
+
+    ["Pointers and Optionals",
+        "\
+        main = {\
+    let x: int32 = 10;\
+    let p: *int32 = &x;\
+    let p2: **int32 = &p;\
+    let y: int32 = *p;\
+    let z: int32? = null;\
+    \
+    let a: int32 = 10;\
+    let b: int32? = 11;\
+    b = null;\
+    const c: int32? = null;\
+    let d: (*int32)? = null;\
+    let f: *(int32?) = &z;\
+    }"
+    ],
+    [
+  "Function taking array as a parameter",
+  "\
+  affix io@exscribe;\
+  evoke sumArray(arr: [any]) -> int32 {\
+    return arr[0]\
+  }\
+  main = {\
+    let nums: [int32] = [3, 4];\
+    exscribe sumArray(nums);\
+  }"
+],
+
+[
+  "Implicit widening fallback in areCompatible",
+  "\
+  affix io@exscribe;\
+  main = {\
+    let a: int32 = 5;\
+    let b: int64 = 10;\
+    exscribe a + b;\
+  }"
+],
+[
+  "Binary expression with anyType as left operand",
+  "\
+  affix io@exscribe;\
+  main = {\
+    let a = 5;\
+    let b: int32 = 2;\
+    exscribe a + b;\
+  }"
+],
+
+[
+  "Binary expression with anyType as right operand",
+  "\
+  affix io@exscribe;\
+  main = {\
+    let a: int32 = 5;\
+    let b = 2;\
+    exscribe a + b;\
+  }"
+],
+[
+  "Modulo operation with constant folding",
+  "\
+  affix io@exscribe;\
+  main = {\
+    exscribe 10 % 3;\
+  }"
+],
+
+[
+  "Binary operation with non-constant values (skips folding)",
+  "\
+  affix io@exscribe;\
+  main = {\
+    let a: int32 = 5;\
+    let b: int32 = 2;\
+    exscribe a * b;\
+  }"
+],
+
+[
+  "String + glyph becomes string",
+  "\
+  affix io@exscribe;\
+  main = {\
+    let ch: glyph = 'A';\
+    let s: string = \"Letter: \";\
+    exscribe s + ch;\
+  }"
+],
+[
+  "Imported function with no expectedFields executes",
+  "\
+    affix io@exscribe;\
+  affix typing@typeof;\
+  main = {\
+    let x: int32 = 42;\
+    exscribe typeof(x);\
+  }"
+],
 ]
 
 const semanticErrors = [   
@@ -288,6 +415,26 @@ const semanticErrors = [
         "Division by zero is not allowed."
     ],
 
+    [
+  "Unsigned minus signed triggers underflow error",
+  "\
+  affix io@exscribe;\
+  main = {\
+    let a: uint32 = 5;\
+    let b: int32 = 3;\
+    exscribe a - b;\
+  }"
+],
+
+[
+  "Error shows fallback name using node.sourceString",
+  "\
+  main = {\
+    let notFunc: int32 = 3;\
+    invoke notFunc();\
+  }"
+],
+
     ["Type mismatch in assignment", 
         "\
         main = { \
@@ -295,7 +442,23 @@ const semanticErrors = [
         }", 
         "Cannot assign a string to a variable of type int32."
     ],
+    [
+  "Return with a value in a function declared void",
+  "\
+  evoke voidFunction() -> void { \
+    return 1; \
+  }",
+  "Return with a value in void function"
+],
 
+[
+  "Return statement in function missing declared return type",
+  "\
+  evoke missingReturnType() { \
+    return 42; \
+  }",
+  "Function declaration requires a return type"
+],
     ["Invalid array indexing", 
         "\
         affix io@exscribe; \

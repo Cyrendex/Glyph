@@ -1,243 +1,158 @@
+import * as core from "./core.js"
+
 export default function optimize(node) {
-    return optimizers?.[node?.kind]?.(node) ?? node;
+    return optimizers?.[node.kind]?.(node) ?? node
 }
 
-function deepEqual(a, b) {
-    if (typeof a !== typeof b) return false;
-    if (typeof a === "number" || typeof a === "boolean" || typeof a === "string") return a === b;
-    if (a === null || b === null) return a === b;
-    if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
-    if (typeof a === "object" && typeof b === "object") {
-        const keysA = Object.keys(a);
-        const keysB = Object.keys(b);
-        if (keysA.length !== keysB.length) return false;
-        return keysA.every(k => deepEqual(a[k], b[k]));
-    }
-    return false;
-}
-
-function isSimplifiableType(type) {
-    const simplifiableTypes = ['int', 'uint', 'int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64', 'float32', 'float64'];
-    return simplifiableTypes.some(sub => type.includes(sub));
-}
-
-function isNumeric(variable) {
-    return (variable?.kind === undefined) ? (typeof variable === "number" || typeof variable === "bigint") : (isNumeric(getValue(variable)))
-}
-
-function getValue(x) {
-    if (typeof x === "number" || typeof x === "boolean") return x;
-    if (x?.kind === "NumericLiteral") return (optimize(x).value);
-    if (x?.kind === "BooleanLiteral") return (optimize(x).value);
-    if (x?.kind === "Variable") return (optimize(x).initializer?.value ?? optimize(x).value);
-    return x?.initializer ?? x?.value
-}
-
-function buildBinaryReturn(x) {
-
-}
+const isZero = (e) => e?.kind === "NumericLiteral" && (e.value === 0 || e.value === 0n)
+const isOne = (e) => e?.kind === "NumericLiteral" && (e.value === 1 || e.value === 1n)
 
 const optimizers = {
     Program(p) {
-        p.statements = p.statements.flatMap(optimize);
-        return p;
+        p.statements = p.statements.flatMap(optimize)
+        return p
     },
-
-    MainStatement(m) {
-        m.executables = m.executables.flatMap(optimize);
-        return m;
-    },
-
+    
     VariableDeclaration(d) {
-        d.variable = optimize(d.variable);
-        d.initializer = optimize(d.initializer);
-        return d;
+        d.variable = optimize(d.variable)
+        d.initializer = optimize(d.initializer)
+        return d
     },
 
-    Variable(v) {
-        v.initializer = optimize(v.initializer);
-        return v;
+    FunctionEvoke(d) {
+        d.fun = optimize(d.fun)
+        return d
     },
 
-    NumericLiteral(l) {
-        return {
-            kind: "NumericLiteral",
-            value: l.type.includes("int") ? BigInt(l.value) : Number(l.value),
-            type: l.type
-        };
+    Function(f) {
+        if (f.body) f.body = f.body.flatMap(optimize)    
+        return f
     },
 
-    StringLiteral(l) {
-        return { kind: "StringLiteral", value: l.value, type: l.type ?? "string" };
+    Increment(s) {
+        s.variable = optimize(s.variable)
+        s.variable.initializer.value = s.variable.type.includes("int") ? s.variable.initializer.value + 1n : s.variable.initializer.value + 1
+        return s
     },
 
-    BooleanLiteral(l) {
-        return { kind: "BooleanLiteral", value: Boolean(l.value), type: l.type ?? "bool" };
+    Decrement(s) {
+        s.variable = optimize(s.variable)
+        s.variable.initializer.value = s.variable.type.includes("int") ? s.variable.initializer.value - 1n : s.variable.initializer.value - 1
+        return s
     },
 
-    GlyphLiteral(l) {
-        return { kind: "GlyphLiteral", value: l.value, type: l.type ?? "glyph" };
+    Assignment(s) {
+        s.source = optimize(s.source)
+        s.target = optimize(s.target)
+        if (s.source === s.target) {
+            return []
+        }
+        return s
     },
 
-    CodePointLiteral(l) {
-        return { kind: "CodePointLiteral", value: l.value, type: l.type ?? "codepoint" };
+    ReturnStatement(s) {
+        s.expression = optimize(s.expression)
+        return s
     },
 
-    NullLiteral(_) {
-        return { kind: "NullLiteral", value: null, type: null };
+    IfStatement(s) {
+        s.condition = optimize(s.condition)
+        s.consequent = s.consequent.flatMap(optimize)
+        if (s.alternative?.kind?.endsWith?.("IfStatement")) {
+            s.alternative = optimize(s.alternative)
+        } else {
+            s.alternative = s.alternative.flatMap(optimize)
+        }
+        if (s.condition?.kind === "BooleanLiteral") {
+            return s.condition.value ? s.consequent : s.alternative;
+        }
+        return s
     },
 
-    AddressOf(e) {
-        e.expression = optimize(e.expression);
-        return e;
+    WhileStatement(s) {
+        s.condition = optimize(s.condition)
+        if (s.condition.value === false) {
+            return []
+        }
+        s.block = s.block.flatMap(optimize)
+        return s
+    },
+    
+    BinaryExpression(e) {
+        e.op = optimize(e.op)
+        e.left = optimize(e.left)
+        e.right = optimize(e.right)
+        if (e.op === "&&") {
+            if (e.left?.value === true) return e.right
+            if (e.right?.value === true) return e.left
+        } else if (e.op === "||") {
+            if (e.left?.value === false) return e.right
+            if (e.right?.value === false) return e.left
+        } else if (e.left?.kind === "NumericLiteral" && e.right?.kind === "NumericLiteral") {
+            if (e.op === "+") return core.NumericLiteral(e.left.value + e.right.value, e.type)
+            if (e.op === "-") return core.NumericLiteral(e.left.value - e.right.value, e.type)
+            if (e.op === "*") return core.NumericLiteral(e.left.value * e.right.value, e.type)
+            if (e.op === "/") return core.NumericLiteral(e.left.value / e.right.value, e.type)
+            if (e.op === "**") return core.NumericLiteral(e.left.value ** e.right.value, e.type)
+            if (e.op === "<") return core.BooleanLiteral(e.left.value < e.right.value)
+            if (e.op === "<=") return core.BooleanLiteral(e.left.value <= e.right.value)
+            if (e.op === "==") return core.BooleanLiteral(e.left.value === e.right.value)
+            if (e.op === "!=") return core.BooleanLiteral(e.left.value !== e.right.value)
+            if (e.op === ">=") return core.BooleanLiteral(e.left.value >= e.right.value)
+            if (e.op === ">") return core.BooleanLiteral(e.left.value > e.right.value)
+        } else if (e.left?.kind === "NumericLiteral") {
+            if (isZero(e.left) && e.op === "+") return e.right
+            if (isOne(e.left) && e.op === "*") return e.right
+            if (isZero(e.left) && e.op === "-") return optimize(core.unary("-", e.right.value))
+            if (isOne(e.left) && e.op === "**") return e.left
+            if (isZero(e.left) && ["*", "/"].includes(e.op)) return e.left
+
+        } else if (e.right?.kind === "NumericLiteral") {
+            if (["+", "-"].includes(e.op) && isZero(e.right)) return e.left
+            if (["*", "/"].includes(e.op) && isOne(e.right)) return e.left
+            if (e.op === "*" && isZero(e.right)) return e.right
+            if (e.op === "**" && isZero(e.right)) return core.NumericLiteral(1n,core.intType)
+        } return e
+    },
+
+    UnaryExpression(e) {
+        e.op = optimize(e.op)
+        e.operand = optimize(e.operand)
+        if (e.operand?.kind === "NumericLiteral") {
+            if (e.op === "-") {
+                return core.NumericLiteral(-e.operand.value, e.operand.type)
+            }
+        }
+        return e
+    },
+
+    SubscriptExpression(e) {
+        e.array = optimize(e.array)
+        e.index = optimize(e.index)
+        return e
+    },
+
+    ArrayExpression(e) {
+        e.elements = e.elements.map(optimize)
+        return e
+    },
+
+    FunctionCall(c) {
+        c.callee = optimize(c.callee)
+        c.args = c.args.map(optimize)
+        return c
+    },
+
+    ExscribeStatement(e) {
+        e.expression = optimize(e.expression)
+        return e
     },
 
     Dereference(e) {
         e.expression = optimize(e.expression);
-        if (e.expression.kind === "AddressOf") return e.expression.expression;
-        return e;
-    },
-
-    FunctionEvoke(d) {
-        d.fun = optimize(d.fun);
-        return d;
-    },
-
-    Function(f) {
-        f.body = f.body.flatMap(optimize);
-        return f;
-    },
-
-    FunctionCall(c) {
-        c.callee = optimize(c.callee);
-        c.args = c.args.map(optimize);
-        return c;
-    },
-
-    ReturnStatement(r) {
-        r.expression = optimize(r.expression);
-        return r;
-    },
-
-    Assignment(a) {
-        a.source = optimize(a.source);
-        a.target = optimize(a.target);
-        if (a.source === a.target) return [];
-        return a;
-    },
-
-    Increment(i) {
-        i.variable = optimize(i.variable);
-        return i;
-    },
-
-    Decrement(d) {
-        d.variable = optimize(d.variable);
-        return d;
-    },
-
-    ExscribeStatement(e) {
-        e.expression = optimize(e.expression);
-        return e;
-    },
-
-    BinaryExpression(e) {
-        e.left = optimize(e.left);
-        e.right = optimize(e.right);
-        
-        const leftVal = getValue(e.left);
-        const rightVal = getValue(e.right);
-        
-        if (e.op === "&&") {
-            if (leftVal === false) return optimize({ kind: "BooleanLiteral", value: false, type: "bool" });
-            if (leftVal === true) return e.right;
-        }
-
-        if (e.op === "||") {
-            if (leftVal === true) return optimize({ kind: "BooleanLiteral", value: true, type: "bool" });
-            if (leftVal === false) return e.right;
-        }
-        
-        if (isNumeric(leftVal) && isNumeric(rightVal) && isSimplifiableType(e.left.type) && isSimplifiableType(e.right.type)) {
-            
-            //Expressions with a variable should return a variable?
-            // if (leftVal === 0 && e.op === "+") return e.right;
-            // if (rightVal === 0 && e.op === "+") return e.left;
-            // if (leftVal === 1 && e.op === "*") return e.right;
-            // if (rightVal === 1 && e.op === "*") return e.left;
-            // if (rightVal === 0 && e.op === "*") return optimize({ kind: "NumericLiteral", value: 0, type: e.left.type });
-
-            let result;
-            switch (e.op) {
-                case "+": result = leftVal + rightVal; break;
-                case "-": result = leftVal - rightVal; break;
-                case "*": result = leftVal * rightVal; break;
-                case "/": result = leftVal / rightVal; break;
-                case "**": result = leftVal ** rightVal; break;
-                case "==": result = leftVal === rightVal; break;
-                case "!=": result = leftVal !== rightVal; break;
-                case "<": result = leftVal < rightVal; break;
-                case "<=": result = leftVal <= rightVal; break;
-                case ">": result = leftVal > rightVal; break;
-                case ">=": result = leftVal >= rightVal; break;
-            }
-            
-            return typeof result === "boolean" ? optimize({ kind: "BooleanLiteral", value: result, type: "bool" }) : optimize({ kind: "NumericLiteral", value: result, type: e.left.type });
-        }
-        
-
-
-
-        return e;
-    },
-
-    UnaryExpression(e) {
-        e.operand = optimize(e.operand);
-        const operand = getValue(e.operand);
-        if (e.op === "-" && isNumeric(operand)) {
-            return { kind: "NumericLiteral", value: -operand, type: e.operand.type };
+        if (e.expression.kind === "AddressOf") {
+            return e.expression.expression;
         }
         return e;
-    },
-
-    IfStatement(s) {
-        s.condition = optimize(s.condition);
-        s.consequent = s.consequent.flatMap(optimize);
-        s.alternative = s.alternative?.flatMap?.(optimize) ?? [];
-        if (s.condition?.kind === "BooleanLiteral") return s.condition.value ? s.consequent : s.alternative;
-        return s;
-    },
-
-    WhileStatement(s) {
-        s.condition = optimize(s.condition);
-        if (s.condition?.kind === "BooleanLiteral" && s.condition.value === false) return [];
-        s.block = s.block.flatMap(optimize);
-        return s;
-    },
-
-    ConjureStatement(s) {
-        s.block = s.block.flatMap(optimize);
-        return s;
-    },
-
-    SubscriptExpression(e) {
-        e.array = optimize(e.array);
-        e.index = optimize(e.index);
-        return e;
-    },
-
-    ArrayExpression(e) {
-        e.elements = e.elements.map(optimize);
-        return e;
-    },
-    
-    TypeStatement(t) {
-        t.expression = optimize(t.expression);
-        t.value = optimize(t.value);
-        return t;
-    },
-
-    BreakStatement(s) {
-        return s;
     }
-};
+}

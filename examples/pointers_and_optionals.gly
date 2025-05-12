@@ -6,7 +6,6 @@ main = {
     let p2: **int32 = &p;
     let y: int32 = *p;
     let z: int32? = null;
-    /@ DOESN'T CURRENTLY WORK: let z: int32 = &(&p); @/
 
     let a: int32 = 10;
     let b: int32? = 11;

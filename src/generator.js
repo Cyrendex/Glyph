@@ -93,6 +93,7 @@ export default function generate(program) {
         Function(f) {
             return targetName(f);
         },
+        
         FunctionCall(c) {
             const call = `${gen(c.callee)}(${c.args.map(gen).join(", ")})`;
             if (c.type === voidType) {

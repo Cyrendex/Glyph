@@ -67,20 +67,20 @@ for (const base of numericBases) {
 
 
 
-function isPointerType(type) {
+function isPointerightTermType(type) {
     return typeof type === "string" && type.endsWith("*");
 }
 
-function unwrapPointerType(type) {
-    return isPointerType(type) ? type.slice(0, -1) : type;
+function unwrapPointerightTermType(type) {
+    return isPointerightTermType(type) ? type.slice(0, -1) : type;
 }
 
-function isOptionalType(type) {
+function isOptionaleftTermType(type) {
     return typeof type === "string" && type.endsWith("?");
 }
 
-function unwrapOptionalType(type) {
-    return isOptionalType(type) ? type.slice(0, -1) : type;
+function unwrapOptionaleftTermType(type) {
+    return isOptionaleftTermType(type) ? type.slice(0, -1) : type;
 }
 
 function isArrayType(type) {
@@ -107,10 +107,10 @@ function canConvert(from, to, value) {
     if (from === to || from === "any" || to === "any") return true;
     if (from === "glyph" && to === "string") return true;
     
-    if (isOptionalType(to) && from === unwrapOptionalType(to)) return true;
+    if (isOptionaleftTermType(to) && from === unwrapOptionaleftTermType(to)) return true;
     
     if (value === null) {
-        return isOptionalType(to) || to === core.anyType;
+        return isOptionaleftTermType(to) || to === core.anyType;
     }
 
     if (isArrayType(from) && isArrayType(to)) {
@@ -196,17 +196,17 @@ export default function analyze(match) {
         return false;
     }
       
-    function areCompatible(t1, t2) {
-        if (t1 === t2 || t1 === core.anyType || t2 === core.anyType) {
+    function areCompatible(term1, term2) {
+        if (term1 === term2 || term1 === core.anyType || term2 === core.anyType) {
             return true;
         }
 
-        // Extract base types without bitsizes (e.g., int16 -> int, uint8 -> uint)
+        // Extract base types without bitsizes (e.g., interm16 -> int, uint8 -> uint)
         const stripBits = t => t.replace(/\d+$/, "");
 
-        // Allow signed <-> unsigned conversions between same base type (e.g., int16 ↔ uint16)
-        const base1 = stripBits(t1);
-        const base2 = stripBits(t2);
+        // Allow signed <-> unsigned conversions between same base type (e.g., interm16 ↔ uinterm16)
+        const base1 = stripBits(term1);
+        const base2 = stripBits(term2);
 
         const unsigned = base => base.startsWith("u") ? base.slice(1) : base;
 
@@ -215,7 +215,7 @@ export default function analyze(match) {
         }
 
         // Also fallback to implicit widening rules
-        return canConvert(t1, t2, undefined) || canConvert(t2, t1, undefined);
+        return canConvert(term1, term2, undefined) || canConvert(term2, term1, undefined);
     }
 
     function handleBinaryExpression(op, left, right, node, categoryCheckFn, categoryName) {
@@ -223,6 +223,7 @@ export default function analyze(match) {
         const rightType = right.type;
         const leftValid = categoryCheckFn(leftType);
         const rightValid = categoryCheckFn(rightType);
+
         check(leftValid && rightValid, `Operands must be ${categoryName}`, node);
 
         let resultType = leftType;
@@ -238,14 +239,14 @@ export default function analyze(match) {
         let value = undefined;
         if ("value" in left && "value" in right) {
             try {
-                const lVal = left.value;
-                const rVal = right.value;
+                const leftValue = left.value;
+                const rightValue = right.value;
                 switch (op) {
-                    case "+": value = lVal + rVal; break;
-                    case "-": value = lVal - rVal; break;
-                    case "*": value = lVal * rVal; break;
-                    case "/": value = lVal / rVal; break;
-                    case "%": value = lVal % rVal; break;
+                    case "+": value = leftValue + rightValue; break;
+                    case "-": value = leftValue - rightValue; break;
+                    case "*": value = leftValue * rightValue; break;
+                    case "/": value = leftValue / rightValue; break;
+                    case "%": value = leftValue % rightValue; break;
                 }
             } catch {
                 value = undefined;
@@ -287,13 +288,13 @@ export default function analyze(match) {
 
         for (let i = 0; i < parameters.length; i++) {
             const paramType = parameters[i].type;
-            const arg = args[i];
-            const argType = arg.type;
-            if (canConvert(argType, paramType, arg.value)) {
-                arg.type = paramType;
+            const argument = args[i];
+            const argumentType = argument.type;
+            if (canConvert(argumentType, paramType, argument.value)) {
+                argument.type = paramType;
             } else {
-                check(argType === paramType || paramType === core.anyType || argType === core.anyType,
-                    `Cannot assign ${argType} to ${paramType}`, node);
+                check(argumentType === paramType || paramType === core.anyType || argumentType === core.anyType,
+                    `Cannot assign ${argumentType} to ${paramType}`, node);
             }
         }
     }
@@ -302,7 +303,7 @@ export default function analyze(match) {
         check(isArrayType(array.type), "Only arrays can be subscripted", arrayNode);
         check(isNumeric(index.type), "Array index must be a number", indexNode);
         check(index.value >= 0n, "Array index must be non-negative", indexNode);
-        if (array.kind === "Variable") {
+        if (array.kind === "Variable" && array.initializer && Array.isArray(array.initializer.elements)) {
             check(!(Number(index.value) > (array.initializer.elements.length - 1)), "Array index out of bounds", indexNode);
         } else if (array.kind === "SubscriptExpression") {
             checkArrayIndexing(array.array, arrayNode, index, indexNode);
@@ -350,56 +351,56 @@ export default function analyze(match) {
         },
 
         Condition_and(left, _op, right) {
-            const l = left.analyze();
-            const r = right.analyze();
-            check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
-            return core.binary("&&", l, r, core.booleanType);
+            const leftTerm = left.analyze();
+            const rightTerm = right.analyze();
+            check(leftTerm.type === core.booleanType && rightTerm.type === core.booleanType, "Operands must be boolean", _op);
+            return core.binary("&&", leftTerm, rightTerm, core.booleanType);
         },
 
         Condition_or(left, _op, right) {
-            const l = left.analyze();
-            const r = right.analyze();
-            check(l.type === core.booleanType && r.type === core.booleanType, "Operands must be boolean", _op);
-            return core.binary("||", l, r, core.booleanType);
+            const leftTerm = left.analyze();
+            const rightTerm = right.analyze();
+            check(leftTerm.type === core.booleanType && rightTerm.type === core.booleanType, "Operands must be boolean", _op);
+            return core.binary("||", leftTerm, rightTerm, core.booleanType);
         },
 
         Condition_add(left, _op, right) {
-            const l = left.analyze();
-            const r = right.analyze();
+            const leftTerm = left.analyze();
+            const rightTerm = right.analyze();
 
-            const lIsNum = isNumeric(l.type);
-            const rIsNum = isNumeric(r.type);
-            const lIsText = isText(l.type);
-            const rIsText = isText(r.type);
+            const leftIsNumeric = isNumeric(leftTerm.type);
+            const rightIsNumeric = isNumeric(rightTerm.type);
+            const leftIsTextual = isText(leftTerm.type);
+            const rightIsTextual = isText(rightTerm.type);
 
-            check(!(lIsNum && rIsText) && !(lIsText && rIsNum), "Cannot add text and number", _op);
+            check(!(leftIsNumeric && rightIsTextual) && !(leftIsTextual && rightIsNumeric), "Cannot add text and number", _op);
 
-            if (lIsText && isGlyph(r.type) || isGlyph(l.type) && rIsText) {
-                return core.binary("+", l, r, core.stringType);
+            if (leftIsTextual && isGlyph(rightTerm.type) || isGlyph(leftTerm.type) && rightIsTextual) {
+                return core.binary("+", leftTerm, rightTerm, core.stringType);
             }
 
-            if (lIsText && rIsText) {
-                check(l.type === r.type, "Cannot add string to glyph", _op);
-                return core.binary("+", l, r, l.type);
+            if (leftIsTextual && rightIsTextual) {
+                check(leftTerm.type === rightTerm.type, "Cannot add string to glyph", _op);
+                return core.binary("+", leftTerm, rightTerm, leftTerm.type);
             }
 
-            return handleBinaryExpression("+", l, r, _op, isNumeric, "numbers");
+            return handleBinaryExpression("+", leftTerm, rightTerm, _op, isNumeric, "numbers");
         },
 
         Condition_sub(left, _op, right) {
-            const l = left.analyze();
-            const r = right.analyze();
+            const leftTerm =left.analyze();
+            const rightTerm =right.analyze();
 
-            const lType = l.type;
-            const rType = r.type;
+            const leftTermType = leftTerm.type;
+            const rightTermType = rightTerm.type;
 
-            check(isNumeric(lType) && isNumeric(rType), "Operands must be numeric", _op);
+            check(isNumeric(leftTermType) && isNumeric(rightTermType), "Operands must be numeric", _op);
 
-            const resultMightUnderflow = lType.startsWith("u") && !rType.startsWith("u");
-            check(!resultMightUnderflow, `Cannot subtract signed value from unsigned (${lType} - ${rType})`, _op);
+            const resultMightUnderflow = leftTermType.startsWith("u") && !rightTermType.startsWith("u");
+            check(!resultMightUnderflow, `Cannot subtract signed value from unsigned (${leftTermType} - ${rightTermType})`, _op);
 
-            const resultType = areCompatible(lType, rType) ? lType : core.anyType;
-            return core.binary("-", l, r, resultType);
+            const resultType = areCompatible(leftTermType, rightTermType) ? leftTermType : core.anyType;
+            return core.binary("-", leftTerm , rightTerm, resultType);
         },
 
         Term_mul(left, _op, right) {
@@ -414,6 +415,14 @@ export default function analyze(match) {
             const rightNode = right.analyze();
             const operator = _op.sourceString;
             check(!(BigInt(rightNode.value) === 0n), "Cannot divide by zero", _op);
+            return handleBinaryExpression(operator, result, rightNode, _op, isNumeric, "numbers");
+        },
+
+        Term_mod(left, _op, right) {
+            const result = left.analyze();
+            const rightNode = right.analyze();
+            const operator = _op.sourceString;
+            check(!(BigInt(rightNode.value) === 0n), "Cannot mod by zero", _op);
             return handleBinaryExpression(operator, result, rightNode, _op, isNumeric, "numbers");
         },
 
@@ -432,23 +441,23 @@ export default function analyze(match) {
         },
 
         Factor_exp(base, _op, exponent) {
-            const left = base.analyze();
-            const right = exponent.analyze();
-            return handleBinaryExpression("**", left, right, _op, isNumeric, "numbers");
+            const leftTerm = base.analyze();
+            const rightTerm = exponent.analyze();
+            return handleBinaryExpression("**", leftTerm, rightTerm, _op, isNumeric, "numbers");
         },
 
         Exp_relop(left, _op, right) {
-            const l = left.analyze();
-            const r = right.analyze();
-            const o = _op.sourceString;
+            const leftTerm = left.analyze();
+            const rightTerm = right.analyze();
+            const operandString = _op.sourceString;
 
-            if (["==", "!="].includes(o)) {
-                check(areCompatible(l.type, r.type), "Operands to comparison must have the same type", _op);
+            if (["==", "!="].includes(operandString)) {
+                check(areCompatible(leftTerm.type, rightTerm.type), "Operands to comparison must have the same type", _op);
             } else {
-                check(isNumeric(l.type) && isNumeric(r.type), "Operands must be numbers", _op);
+                check(isNumeric(leftTerm.type) && isNumeric(rightTerm.type), "Operands must be numbers", _op);
             }
 
-            return core.binary(o, l, r, core.booleanType);
+            return core.binary(operandString, leftTerm, rightTerm, core.booleanType);
         },
 
         Primary_functionCall(id, argsNode) {
@@ -461,7 +470,6 @@ export default function analyze(match) {
             check(callee?.type?.kind === "FunctionType",`${callee.name ?? calleeName} is not a function`,id);
 
             const args = argsNode.analyze();
-            
 
             if (callee.kind === "Function") {
                 checkArgumentCountAndTypes(callee.parameters, args, id);
@@ -492,10 +500,6 @@ export default function analyze(match) {
 
                 //Need additional checks for Imported Functions with more than 1 expected parameter (ex: swap(1, 2))
             }
-            
-            if (callee.kind === "FunctionEvoke") {
-                return core.functionCall(callee.fun, args);
-            }
 
             return core.functionCall(callee, args);
         },
@@ -508,9 +512,9 @@ export default function analyze(match) {
         ImportStmt(_affix, moduleName, _at, importName, _semi) {
             const module = moduleName.sourceString;
             const component = importName.sourceString;
-            const lib = standardLibrary[module];
-            check(lib, `Module ${module} not found`, moduleName);
-            const entity = lib[component];
+            const library = standardLibrary[module];
+            check(library, `Module ${module} not found`, moduleName);
+            const entity = library[component];
             check(entity, `Module ${module} has no component ${component}`, importName);
             checkNotAlreadyDeclared(component, importName);
             context.add(component, entity);
@@ -525,9 +529,9 @@ export default function analyze(match) {
             const returnTypeStr = returnType.sourceString;
             
             const placeholderParams = [];
-            const placeholderType = core.functionType(placeholderParams, returnTypeStr);
+            const placeholderightTermType = core.functionType(placeholderParams, returnTypeStr);
             const funcEntity = core.fun(name, placeholderParams, null, returnTypeStr);
-            funcEntity.type = placeholderType;
+            funcEntity.type = placeholderightTermType;
           
             context.add(name, funcEntity);
           
@@ -556,14 +560,15 @@ export default function analyze(match) {
             const name = id.sourceString;
             checkNotAlreadyDeclared(name, id);
             const placeholderParams = [];
-            const placeholderType = core.functionType(placeholderParams, returnType);
+            const placeholderightTermType = core.functionType(placeholderParams, returnType);
             const funcEntity = core.fun(name, placeholderParams, null, returnType);
-            funcEntity.type = placeholderType;
+            funcEntity.type = placeholderightTermType;
             context.add(name, funcEntity);
             context = context.newChildContext({ currentFunction: funcEntity });
             const params = paramList.numChildren > 0
                 ? paramList.child(0).asIteration().children.map(p => p.analyze())
                 : [];
+
             funcEntity.parameters = params;
             funcEntity.type.paramTypes = params.map(p => p.type);
             const conjureNode = conjureStmt.analyze();
@@ -584,16 +589,13 @@ export default function analyze(match) {
             const name = id.sourceString;
             let typeStr;
 
-            if (typeOpt.numChildren === 0) {
-                typeStr = core.anyType;
-            } else {
-                const typeHintNode = typeOpt.child(0);
-                const actualTypeNode = typeHintNode.child(1);
-                typeStr = actualTypeNode.analyze();
+ 
+            const typeHintNode = typeOpt.child(0);
+            const actualeftTermTypeNode = typeHintNode.child(1);
+            typeStr = actualeftTermTypeNode.analyze();
 
-                if (Array.isArray(typeStr)) {
-                    typeStr = typeStr[0];
-                }
+            if (Array.isArray(typeStr)) {
+                typeStr = typeStr[0];
             }
 
             const paramVar = core.variable(name, typeStr);
@@ -610,7 +612,6 @@ export default function analyze(match) {
         Primary_subscript(arrayNode, _open, indexNode, _close) {
             const array = arrayNode.analyze();
             const index = indexNode.analyze();
-
             checkArrayIndexing(array, arrayNode, index, indexNode);
             const elementType = array.type.replace(/\[\]$/, "");
             return core.subscript(array, index, elementType);
@@ -621,12 +622,8 @@ export default function analyze(match) {
             const opStr = op.sourceString;
           
             if (opStr === "*") {
-              return `${base}*`; // Pointer to base
-            } else if (opStr === "&") {
-              return `${base}*`; // Address-of also creates a pointer
+                return `${base}*`;
             }
-          
-            throw new Error(`Unknown ref/deref operator: ${opStr}`);
         },
 
         Primary_addr(_amp, expr) {
@@ -637,16 +634,16 @@ export default function analyze(match) {
         
         Primary_deref(_star, expr) {
             const operand = expr.analyze();
-            check(isPointerType(operand.type), "Can only dereference a pointer", expr);
-            return core.dereference(operand, unwrapPointerType(operand.type));
+            check(isPointerightTermType(operand.type), "Can only dereference a pointer", expr);
+            return core.dereference(operand, unwrapPointerightTermType(operand.type));
         },
 
         Type_group(_open, inner, _close) {
             return inner.analyze();
         },
 
-        Type_option(innerType, _q) {
-            const typeStr = innerType.analyze();
+        Type_option(innerightTermType, _q) {
+            const typeStr = innerightTermType.analyze();
             return core.optionalType(typeStr);
         },
 
@@ -654,35 +651,9 @@ export default function analyze(match) {
             return core.NullLiteral();
         },
 
-        Type_hint(_colon, typeNode) {
-            return typeNode.analyze();
-        },
-
         Type_conjure(_conjure, _open, returnTypeNode, _close) {
             const returnType = returnTypeNode.analyze();
             return core.functionType([], returnType);
-        },
-
-        numericType(typeNode) {
-            const literal = typeNode.sourceString;
-            check(validTypeRegex.test(literal), `Invalid numeric type: ${literal}`, typeNode);
-            return literal;
-        },
-
-        unsignedNumericType(typeName, bitsizeOpt) {
-            const baseType = typeName.sourceString;
-            const bitSize = bitsizeOpt.numChildren ? bitsizeOpt.sourceString : "";
-            const typeStr = `${baseType}${bitSize}`;
-            check(validTypeRegex.test(typeStr), `Invalid numeric type: ${typeStr}`, this);
-            return typeStr;
-        },
-
-        signedNumericType(typeName, bitsizeOpt) {
-            const baseType = typeName.sourceString;
-            const bitSize = bitsizeOpt.numChildren ? bitsizeOpt.sourceString : "";
-            const typeStr = `${baseType}${bitSize}`;
-            check(validTypeRegex.test(typeStr), `Invalid numeric type: ${typeStr}`, this);
-            return typeStr;
         },
 
         InvokeStmt_invoke(_invoke, funcId, argsNode, _endchar) {
@@ -703,13 +674,6 @@ export default function analyze(match) {
             const value = exp.analyze();
             check(value.type !== core.voidType,"Cannot exscribe a void value",exp);
             return core.exscribeStatement(value);
-        },
-
-        TypeStmt(_type, exp, _semi) {
-            const typeFunc = context.lookup("typeof");
-            checkDeclared(typeFunc, "typeof", _type);
-            const value = exp.analyze();
-            return core.typeStatement(value);
         },
         
         // Return statement: return expr?;
@@ -766,10 +730,6 @@ export default function analyze(match) {
             return node;
         },
 
-        NonemptyListOf(first, _sep, rest) {
-            return [first.analyze(), ...rest.analyze()];
-        },
-
         VarDec(id, maybeType, _eq, expr, _semi) {
             const name = id.sourceString;
             checkNotAlreadyDeclared(name, id);
@@ -784,24 +744,11 @@ export default function analyze(match) {
                 const typeNode = typeHintNode.child(1);
                 typeStr = typeNode.analyze();
               
-                if (typeStr.kind === "FunctionType" && initial.kind === "Function") {
-                    const funcType = typeStr;
-                    const func = initial;
-              
-                    funcType.paramTypes = func.parameters.map(p => p.type);
-                    func.type = funcType;
-                    func.returnHint = funcType.returnTypes;
-                }
-              
-                if (Array.isArray(typeStr)) {
-                    typeStr = typeStr[0];
-                }
-              
                 check(validTypeRegex.test(typeStr) || typeStr.kind === "FunctionType", "Type expected", typeNode);
                 
                 if (typeStr !== core.anyType) {
                     if (initial.value === null) {
-                        check(isOptionalType(typeStr), `Cannot assign null to non-optional type ${typeStr}`, id);
+                        check(isOptionaleftTermType(typeStr), `Cannot assign null to non-optional type ${typeStr}`, id);
                         initial.type = typeStr;
                     } else if (typeStr.kind === "FunctionType") {
                         check(initial.fun.type.kind === "FunctionType", `Expected a function`, expr);
@@ -819,7 +766,6 @@ export default function analyze(match) {
         },
         
         
-        // Assignment: target = source;
         AssignmentStmt(id, _eq, expr, _semi) {
             const source = expr.analyze();
             const target = id.analyze();
@@ -830,7 +776,7 @@ export default function analyze(match) {
             }
 
             if (source.value === null) {
-                check(isOptionalType(target.type),`Cannot assign null to non-optional type ${target.type}`,id);
+                check(isOptionaleftTermType(target.type),`Cannot assign null to non-optional type ${target.type}`,id);
                 source.type = target.type;
             } else {
                 check(
@@ -865,22 +811,9 @@ export default function analyze(match) {
         },
 
         ConjureStmt(_conjure, block) {
-            return core.conjureStatement(block.analyze());
-        },
-
-
-
-        Primary_call(funcExpr, argsNode) {
-            const callee = funcExpr.analyze();
-            check(
-              callee && callee.type && callee.type.kind === "FunctionType",
-              `${callee.name ?? "Value"} is not a function`,
-              funcExpr
-            );
-          
-            const args = argsNode.analyze();
-            checkArgumentCountAndTypes(callee.parameters, args, funcExpr);
-            return core.functionCall(callee, args);
+            block = block.analyze();
+            check(hasReturn(block), "Conjure statement must have a return", _conjure);
+            return core.conjureStatement(block);
         },
 
         // Break statement: break;
@@ -931,49 +864,29 @@ export default function analyze(match) {
         numeral(_digits, _dot, _frac, _e, _expSign, _exp) {
             const text = this.sourceString;
             return (text.includes(".") || text.includes("e") || text.includes("E"))
-                ? { kind: "NumericLiteral", value: Number(text), type: DEFAULT_FLOAT_TYPE }
-                : { kind: "NumericLiteral", value: BigInt(text), type: DEFAULT_INT_TYPE };
+                ? core.NumericLiteral(Number(text), DEFAULT_FLOAT_TYPE)
+                : core.NumericLiteral(BigInt(text), DEFAULT_INT_TYPE);
         },
 
-        stringlit(_open, _chars, _close) {
-            return {
-                kind: "StringLiteral",
-                value: _chars.sourceString,
-                type: core.stringType
-            };
+        stringlit(_open, _chars, _close) {            
+            return core.StringLiteral(_chars.sourceString);
         },
 
         charlit(_open, charNode, _close) {
-            return {
-                kind: "GlyphLiteral",
-                value: charNode.sourceString,
-                type: core.glyphType,
-            };
+            return core.GlyphLiteral(charNode.sourceString);
         },
 
         codepointlit(_open, _prefix, codepointNode, _close) {
             const value = String.fromCodePoint(parseInt(codepointNode.sourceString, 16));
-            return {
-                kind: "CodePointLiteral",
-                value,
-                type: core.codepointType,
-            };
+            return core.CodepointLiteral(value);
         },
 
         Primary_true(_) {
-            return {
-                kind: "BooleanLiteral",
-                value: true,
-                type: core.booleanType
-            };
+            return core.BooleanLiteral(true);
         },
 
         Primary_false(_) {
-            return {
-                kind: "BooleanLiteral",
-                value: false,
-                type: core.booleanType
-            };
+            return core.BooleanLiteral(false);
         }
     });
 

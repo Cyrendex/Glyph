@@ -1,6 +1,5 @@
 affix io@exscribe;
 
-
 main = {
   const gly1: glyph = 'a';
   let gly2: glyph = 'b';
