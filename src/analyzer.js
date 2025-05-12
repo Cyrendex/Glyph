@@ -67,20 +67,20 @@ for (const base of numericBases) {
 
 
 
-function isPointerightTermType(type) {
+function isPointerType(type) {
     return typeof type === "string" && type.endsWith("*");
 }
 
-function unwrapPointerightTermType(type) {
-    return isPointerightTermType(type) ? type.slice(0, -1) : type;
+function unwrapPointerType(type) {
+    return isPointerType(type) ? type.slice(0, -1) : type;
 }
 
-function isOptionaleftTermType(type) {
+function isOptionalType(type) {
     return typeof type === "string" && type.endsWith("?");
 }
 
-function unwrapOptionaleftTermType(type) {
-    return isOptionaleftTermType(type) ? type.slice(0, -1) : type;
+function unwrapOptionalType(type) {
+    return isOptionalType(type) ? type.slice(0, -1) : type;
 }
 
 function isArrayType(type) {
@@ -107,11 +107,7 @@ function canConvert(from, to, value) {
     if (from === to || from === "any" || to === "any") return true;
     if (from === "glyph" && to === "string") return true;
     
-    if (isOptionaleftTermType(to) && from === unwrapOptionaleftTermType(to)) return true;
-    
-    if (value === null) {
-        return isOptionaleftTermType(to) || to === core.anyType;
-    }
+    if (isOptionalType(to) && from === unwrapOptionalType(to)) return true;
 
     if (isArrayType(from) && isArrayType(to)) {
         return canConvertArray(from, to, value);
@@ -184,15 +180,24 @@ export default function analyze(match) {
     }
 
     function hasReturn(node) {
+        if (node.kind === "ReturnStatement") {
+            return true;
+        }
+
         for (let i in node) {
-            if (node[i].kind === "ReturnStatement") return true;
-            if (node[i].kind === "IfStatement") {
-              return hasReturn(node[i].consequent) && hasReturn(node[i].alternative.flat());
+            if (node[i].kind === "ReturnStatement") {
+                return true;
             }
-            if (node[i].kind === "Block") {
-                return node[i].statements.some(hasReturn);
+
+            if (node[i].kind === "IfStatement") {
+                return hasReturn(node[i].consequent) && hasReturn(node[i].alternative.flat());
+            }
+
+            if (node[i].kind === "WhileStatement") {
+                return node[i].block.some(hasReturn);
             }
         }
+
         return false;
     }
       
@@ -529,9 +534,9 @@ export default function analyze(match) {
             const returnTypeStr = returnType.sourceString;
             
             const placeholderParams = [];
-            const placeholderightTermType = core.functionType(placeholderParams, returnTypeStr);
+            const placeholderType = core.functionType(placeholderParams, returnTypeStr);
             const funcEntity = core.fun(name, placeholderParams, null, returnTypeStr);
-            funcEntity.type = placeholderightTermType;
+            funcEntity.type = placeholderType;
           
             context.add(name, funcEntity);
           
@@ -540,7 +545,7 @@ export default function analyze(match) {
             const params = paramList.numChildren > 0
               ? paramList.child(0).asIteration().children.map(p => p.analyze())
               : [];
-          
+            
             funcEntity.parameters = params;
             funcEntity.type.paramTypes = params.map(p => p.type);
             
@@ -560,9 +565,9 @@ export default function analyze(match) {
             const name = id.sourceString;
             checkNotAlreadyDeclared(name, id);
             const placeholderParams = [];
-            const placeholderightTermType = core.functionType(placeholderParams, returnType);
+            const placeholderType = core.functionType(placeholderParams, returnType);
             const funcEntity = core.fun(name, placeholderParams, null, returnType);
-            funcEntity.type = placeholderightTermType;
+            funcEntity.type = placeholderType;
             context.add(name, funcEntity);
             context = context.newChildContext({ currentFunction: funcEntity });
             const params = paramList.numChildren > 0
@@ -589,14 +594,9 @@ export default function analyze(match) {
             const name = id.sourceString;
             let typeStr;
 
- 
             const typeHintNode = typeOpt.child(0);
-            const actualeftTermTypeNode = typeHintNode.child(1);
-            typeStr = actualeftTermTypeNode.analyze();
-
-            if (Array.isArray(typeStr)) {
-                typeStr = typeStr[0];
-            }
+            const actualTypeNode = typeHintNode.child(1);
+            typeStr = actualTypeNode.analyze();
 
             const paramVar = core.variable(name, typeStr);
             context.add(name, paramVar);
@@ -634,16 +634,16 @@ export default function analyze(match) {
         
         Primary_deref(_star, expr) {
             const operand = expr.analyze();
-            check(isPointerightTermType(operand.type), "Can only dereference a pointer", expr);
-            return core.dereference(operand, unwrapPointerightTermType(operand.type));
+            check(isPointerType(operand.type), "Can only dereference a pointer", expr);
+            return core.dereference(operand, unwrapPointerType(operand.type));
         },
 
         Type_group(_open, inner, _close) {
             return inner.analyze();
         },
 
-        Type_option(innerightTermType, _q) {
-            const typeStr = innerightTermType.analyze();
+        Type_option(innerType, _q) {
+            const typeStr = innerType.analyze();
             return core.optionalType(typeStr);
         },
 
@@ -684,25 +684,12 @@ export default function analyze(match) {
 
             const expectedType = func.returnHint || func.returnType;
             const isVoid = expectedType === core.voidType;
-            const hasExpr = expr.numChildren > 0;
-
-            // Handle `return;` (no return value)
-            if (!hasExpr) {
-                check(isVoid, `Return statement in function ${func.name} missing a return value of type ${expectedType}`, _return);
-                return core.returnStatement(null);
-            }
 
             // Handle `return expr;`
             const returnValue = expr.analyze();
 
             if (func.returnHint) {
                 check(!isVoid, "Return with a value in void function", expr);
-            } else {
-                if (!func.returnType) {
-                    func.returnType = returnValue.type;
-                } else {
-                    check(!isVoid, "Return with a value in void function", expr);
-                }
             }
 
             // Ensure the returned type matches the expected one
@@ -748,7 +735,7 @@ export default function analyze(match) {
                 
                 if (typeStr !== core.anyType) {
                     if (initial.value === null) {
-                        check(isOptionaleftTermType(typeStr), `Cannot assign null to non-optional type ${typeStr}`, id);
+                        check(isOptionalType(typeStr), `Cannot assign null to non-optional type ${typeStr}`, id);
                         initial.type = typeStr;
                     } else if (typeStr.kind === "FunctionType") {
                         check(initial.fun.type.kind === "FunctionType", `Expected a function`, expr);
@@ -776,7 +763,7 @@ export default function analyze(match) {
             }
 
             if (source.value === null) {
-                check(isOptionaleftTermType(target.type),`Cannot assign null to non-optional type ${target.type}`,id);
+                check(isOptionalType(target.type),`Cannot assign null to non-optional type ${target.type}`,id);
                 source.type = target.type;
             } else {
                 check(

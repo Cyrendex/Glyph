@@ -35,7 +35,7 @@ main = {
   const var11: bool = true;
   const var12: string = "Hello World";
   const var14: glyph = 'a';
-
+  const var100: any = 12;
 
   const var15: [[int32]] = [[8],[7]];
   const var16: [[ufloat16]] = [[1.1], [2.2]];
