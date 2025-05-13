@@ -1,6 +1,6 @@
 # Glyph
 
-![Glyph Logo](./docs/GlyphLogoText.PNG)
+![Glyph Logo](./docs/logo.PNG)
 
 ## Introduction
 
