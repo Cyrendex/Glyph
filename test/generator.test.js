@@ -283,7 +283,7 @@ const fixtures = [
     }
     console.log(fact_2);
     `
-  },
+    },
 ]
 
 describe("The code generator", () => {
