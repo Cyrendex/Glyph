@@ -112,7 +112,6 @@ Glyph {
   main = "main" ~idchar
   null = "null" ~idchar
 
-
   type = (numericType | bool | string | codepoint | glyph | void | anyType) ~idchar
   numericType = unsignedNumericType | signedNumericType
 

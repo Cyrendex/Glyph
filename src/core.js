@@ -130,7 +130,7 @@ export function NullLiteral() {
 }
 
 export function NumericLiteral(value, type) {
-    return { kind: "NumericLiteral", value, type: (type || 'int32') }
+    return { kind: "NumericLiteral", value, type: (type || "int32") }
 }
 
 export function BooleanLiteral(value) {

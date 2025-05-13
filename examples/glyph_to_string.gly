@@ -1,8 +1,8 @@
 affix io@exscribe;
 
 main = {
-  const gly1: glyph = 'a';
-  let gly2: glyph = 'b';
-  let str: string = gly1 + gly2;
-  exscribe str;
+    const gly1: glyph = 'a';
+    let gly2: glyph = 'b';
+    let str: string = gly1 + gly2;
+    exscribe str;
 }

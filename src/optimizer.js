@@ -58,11 +58,13 @@ const optimizers = {
     IfStatement(s) {
         s.condition = optimize(s.condition)
         s.consequent = s.consequent.flatMap(optimize)
+        
         if (s.alternative?.kind?.endsWith?.("IfStatement")) {
             s.alternative = optimize(s.alternative)
         } else {
             s.alternative = s.alternative.flatMap(optimize)
         }
+        
         if (s.condition?.kind === "BooleanLiteral") {
             return s.condition.value ? s.consequent : s.alternative;
         }

@@ -4,13 +4,12 @@
 
 ## Introduction
 
-Glyph is a language that enables backend developers to approach programming with structured, organized, and intuitive code while introducing more powerful programming abilities. Glyph offers a functional paradigm with integrated imperative techniques, giving the programmer the power to complete complex tasks without losing their code's structure, and features a Rust-ic borrowing and ownership system to support memory manipulation. There will be some thematic words, but the majority of the language will be oriented towards simplicity and intuitivity to streamline the programming experience. Theming for Glyph comes from its root, Hieroglyph, the written symbols for the language of the Ancient Egyptians and other Ancient Civilizations.
+Glyph is a language that enables backend developers to approach programming with structured, organized, and intuitive code while introducing more powerful programming abilities. Glyph offers a functional paradigm with integrated imperative techniques, giving the programmer the power to complete complex tasks without losing their code's structure, and features a Rust-ic pointer syntax for memory manipulation. There will be some thematic words, but the majority of the language will be oriented towards simplicity and intuitivity to streamline the programming experience. Theming for Glyph comes from its root, Hieroglyph, the written symbols for the language of the Ancient Egyptians and other Ancient Civilizations.
 
 ## Features
 - Functional and Imperative paradigms
 - Native support for non-binary representations of real numbers such as floating slash, signed logarithm, and decimal floating point
 - Ability to read strings in as arrays of either graphemes or codepoints
-- Rust-style borrowing and ownership in a safe, beginner-friendly form
 - No root mixing in terminology and library functions
 - Wrappers for other common languages
 - Limited core functionality, importable functionality for additional support

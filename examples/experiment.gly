@@ -8,4 +8,5 @@ main = {
     
     exscribe(double(5));
     exscribe(typeof(f));
+    exscribe(typeof(f(5)));
 }

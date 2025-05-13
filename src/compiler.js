@@ -5,7 +5,7 @@ import generate from "./generator.js"
 
 export default function compile(source, outputType) {
     if (!["parsed", "analyzed", "generated", "optimized", "js"].includes(outputType)) {
-            throw new Error("Unknown output type")
+        throw new Error("Unknown output type")
     }
     
     const match = parse(source)

@@ -2,5 +2,5 @@ affix io@exscribe;
 
 main = { 
     const arr: [[int32]] = [[1, 2], [3, 4]];
-    exscribe arr[1][0];
+    invoke exscribe arr[1][0];
 }

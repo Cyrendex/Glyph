@@ -154,12 +154,15 @@ class Context {
         this.inLoop = inLoop;
         this.currentFunction = currentFunction;
     }
+
     add(name, entity) {
         this.locals.set(name, entity);
     }
+
     lookup(name) {
         return this.locals.get(name) || (this.parent && this.parent.lookup(name));
     }
+    
     newChildContext({ inLoop = false, currentFunction = null } = {}) {
         const funcCtx = currentFunction !== null ? currentFunction : this.currentFunction;
         return new Context(this, inLoop, funcCtx);

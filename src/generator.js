@@ -5,13 +5,8 @@ export default function generate(program) {
     
     const targetName = ((mapping) => {
         return (entity) => {
-            if (!mapping.has(entity)) {
-                mapping.set(entity, mapping.size + 1);
-            }
-        //If you want to use the mapping, uncomment the first line
-        //mapping is used for letting words like ‘switch’ and stuff like that be variable names
-        return `${entity.name}_${mapping.get(entity)}`;
-        // return `${entity.name}`;
+            if (!mapping.has(entity)) { mapping.set(entity, mapping.size + 1); }
+            return `${entity.name}_${mapping.get(entity)}`;
         };
     })(new Map());
     

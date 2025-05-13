@@ -12,7 +12,7 @@ Prints to stdout according to <outputType>, which must be one of:
 
     parsed     a message that the program was matched ok by the grammar
     analyzed   the statically analyzed representation
-    generated  the generated representation
+    generated  the generated representation in JavaScript
     optimized  the optimized semantically analyzed representation
     js         the translation to JavaScript
 `

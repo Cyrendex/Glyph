@@ -1,7 +1,0 @@
-affix io@exscribe;
-
-evoke getArray() -> [int32] = ([1, 2, 3]);
-
-main = { 
-    exscribe getArray(); 
-}
